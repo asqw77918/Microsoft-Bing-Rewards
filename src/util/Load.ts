@@ -81,7 +81,7 @@ function envBoolWithLegacy(primary: string, legacy: string, fallback: boolean): 
     if (envStr(legacy) !== undefined) {
         if (!deprecationWarned.has(legacy)) {
             deprecationWarned.add(legacy)
-            console.warn(`[Accounts] ${legacy} is deprecated; rename it to ${primary}.`)
+            console.warn(`[账号] ${legacy} 已弃用；请重命名为 ${primary}。`)
         }
         return envBool(legacy, fallback)
     }
@@ -131,7 +131,7 @@ export function loadAccounts(): Account[] {
 
             const password = envStr(`ACCOUNT_${index}_PASSWORD`)
             if (!password) {
-                throw new Error(`ACCOUNT_${index}_EMAIL is set but ACCOUNT_${index}_PASSWORD is missing`)
+                throw new Error(`已设置 ACCOUNT_${index}_EMAIL 但缺少 ACCOUNT_${index}_PASSWORD`)
             }
 
             accounts.push({
@@ -148,7 +148,7 @@ export function loadAccounts(): Account[] {
 
         if (!accounts.length) {
             throw new Error(
-                'No accounts found in environment. Set at least one ACCOUNT_N_EMAIL / ACCOUNT_N_PASSWORD pair (see env.example).'
+                '环境中未找到账号。请至少设置一对 ACCOUNT_N_EMAIL / ACCOUNT_N_PASSWORD（参见 env.example）。'
             )
         }
 
@@ -168,7 +168,7 @@ export function loadConfig(): Config {
         const configPath = resolveProjectFile('config.json')
         if (!configPath) {
             throw new Error(
-                'config.json not found - place it in the project root (dist/ and src/ are also searched as fallbacks)'
+                '未找到 config.json - 请将其放在项目根目录（dist/ 和 src/ 也会作为回退搜索路径）'
             )
         }
         const config = fs.readFileSync(configPath, 'utf-8')

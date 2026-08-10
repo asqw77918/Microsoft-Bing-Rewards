@@ -74,6 +74,7 @@ export const ENV_OVERRIDES: EnvOverrideEntry[] = [
     { env: 'CONFIG_EXPERIMENTAL_API_SEARCH', path: 'experimental.apiSearch', type: 'bool' },
     { env: 'CONFIG_EXPERIMENTAL_API_SEARCH_ON_BING', path: 'experimental.apiSearchOnBing', type: 'bool' },
     { env: 'CONFIG_EXPERIMENTAL_BLOCK_MEDIA', path: 'experimental.blockMedia', type: 'bool' },
+    { env: 'CONFIG_EXPERIMENTAL_EDGE_BROWSING', path: 'experimental.edgeBrowsing', type: 'bool' },
 
     // Proxy
     { env: 'CONFIG_PROXY_QUERY_ENGINE', path: 'proxy.queryEngine', type: 'bool' },
@@ -102,6 +103,14 @@ export const ENV_OVERRIDES: EnvOverrideEntry[] = [
     { env: 'CONFIG_NTFY_TITLE', path: 'webhook.ntfy.title', type: 'string' },
     { env: 'CONFIG_NTFY_PRIORITY', path: 'webhook.ntfy.priority', type: 'number' },
     { env: 'CONFIG_NTFY_TAGS', path: 'webhook.ntfy.tags', type: 'array' },
+
+    // PushPlus webhook
+    { env: 'CONFIG_PUSHPLUS_ENABLED', path: 'webhook.pushplus.enabled', type: 'bool' },
+    { env: 'CONFIG_PUSHPLUS_TOKEN', path: 'webhook.pushplus.token', type: 'string' },
+    { env: 'CONFIG_PUSHPLUS_TITLE', path: 'webhook.pushplus.title', type: 'string' },
+    { env: 'CONFIG_PUSHPLUS_TEMPLATE', path: 'webhook.pushplus.template', type: 'string' },
+    { env: 'CONFIG_PUSHPLUS_CHANNEL', path: 'webhook.pushplus.channel', type: 'string' },
+    { env: 'CONFIG_PUSHPLUS_WEBHOOK', path: 'webhook.pushplus.webhook', type: 'string' },
 
     // Webhook log filter
     { env: 'CONFIG_WEBHOOK_LOG_FILTER_ENABLED', path: 'webhook.webhookLogFilter.enabled', type: 'bool' },
@@ -132,7 +141,7 @@ function coerceScalar(raw: string, type: 'bool' | 'number' | 'string', env: stri
     switch (type) {
         case 'bool':
             if (raw !== 'true' && raw !== 'false') {
-                throw new Error(`${env} expects true or false, got '${raw}'.`)
+                throw new Error(`${env} 需要布尔值 true 或 false，但得到 '${raw}'。`)
             }
             return raw === 'true'
         case 'number': {
@@ -247,28 +256,28 @@ if (require.main === module) {
     if (command === 'apply') {
         const configPath = getArg('--config')
         if (!configPath) {
-            console.error('Usage: node dist/util/ConfigEnvOverrides.js apply --config <path>')
+            console.error('用法：node dist/util/ConfigEnvOverrides.js apply --config <路径>')
             process.exit(1)
         }
         try {
             const report = applyEnvOverrides(configPath)
             if (report.errors.length > 0) {
-                console.error('[entrypoint] Invalid CONFIG_* override value(s) - no changes were written:')
-                report.errors.forEach(e => console.error(`[entrypoint]   ${e.message}`))
+                console.error('[启动] 无效的 CONFIG_* 覆盖值 - 未写入任何更改：')
+                report.errors.forEach(e => console.error(`[启动]   ${e.message}`))
                 process.exit(1)
             }
-            report.forced.forEach(f => console.log(`[entrypoint]   .${f.path} = ${f.value} (forced)`))
-            report.applied.forEach(a => console.log(`[entrypoint]   .${a.path} = ${JSON.stringify(a.value)}`))
-            console.log(`[entrypoint] Applied ${report.applied.length} override(s).`)
+            report.forced.forEach(f => console.log(`[启动]   .${f.path} = ${f.value} (强制)`))
+            report.applied.forEach(a => console.log(`[启动]   .${a.path} = ${JSON.stringify(a.value)}`))
+            console.log(`[启动] 已应用 ${report.applied.length} 个覆盖。`)
             process.exit(0)
         } catch (err) {
-            console.error(`[entrypoint] ERROR: ${err instanceof Error ? err.message : String(err)}`)
+            console.error(`[启动] 错误：${err instanceof Error ? err.message : String(err)}`)
             process.exit(1)
         }
     }
 
     if (!command) {
-        console.error('Usage: node dist/util/ConfigEnvOverrides.js <apply|list> [options]')
+        console.error('用法：node dist/util/ConfigEnvOverrides.js <apply|list> [选项]')
         process.exit(1)
     }
 }

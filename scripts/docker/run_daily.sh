@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Preserve any value injected by the caller (e.g. SKIP_RANDOM_SLEEP=true from
-# entrypoint's RUN_ON_START prefix) before the env file can override it.
+# 保留调用者注入的任何值（例如来自 entrypoint 的 RUN_ON_START 前缀的 SKIP_RANDOM_SLEEP=true），
+# 以防 env 文件覆盖它。
 _SKIP_SLEEP_OVERRIDE="${SKIP_RANDOM_SLEEP:-}"
 
-# Restore container environment (ACCOUNT_*, CONFIG_*, etc.) lost when cron spawns this job
+# 恢复 cron 启动此任务时丢失的容器环境（ACCOUNT_*、CONFIG_* 等）
 if [ -f /etc/container_env ]; then
     # shellcheck source=/dev/null
     . /etc/container_env
 fi
 
-# Re-apply the caller's override so sourcing /etc/container_env can't reset it.
+# 重新应用调用者的覆盖，以防 source /etc/container_env 重置它。
 [ -n "$_SKIP_SLEEP_OVERRIDE" ] && SKIP_RANDOM_SLEEP="$_SKIP_SLEEP_OVERRIDE"
 unset _SKIP_SLEEP_OVERRIDE
 
@@ -37,45 +37,45 @@ is_run_daily_process() {
 }
 
 # -------------------------------
-#  Function: Check and fix lockfile integrity
+#  功能：检查并修复锁文件完整性
 # -------------------------------
 self_heal_lockfile() {
-    # If lockfile exists but is empty → remove it
+    # 锁文件存在但为空 → 删除
     if [ -f "$LOCKFILE" ]; then
         local lock_content
         lock_content=$(<"$LOCKFILE" || echo "")
 
         if [[ -z "$lock_content" ]]; then
-            echo "[$(date)] [run_daily.sh] Found empty lockfile → removing."
+            echo "[$(date)] [run_daily.sh] 发现空锁文件 → 删除。"
             rm -f "$LOCKFILE"
             return
         fi
 
-        # If lockfile contains non-numeric PID → remove it
+        # 锁文件包含非数字 PID → 删除
         if ! [[ "$lock_content" =~ ^[0-9]+$ ]]; then
-            echo "[$(date)] [run_daily.sh] Found corrupted lockfile content ('$lock_content') → removing."
+            echo "[$(date)] [run_daily.sh] 发现损坏的锁文件内容（'$lock_content'）→ 删除。"
             rm -f "$LOCKFILE"
             return
         fi
 
-        # If lockfile contains PID but process is dead → remove it
+        # 锁文件包含 PID 但进程已死亡 → 删除
         if ! kill -0 "$lock_content" 2>/dev/null; then
-            echo "[$(date)] [run_daily.sh] Lockfile PID $lock_content is dead → removing stale lock."
+            echo "[$(date)] [run_daily.sh] 锁文件 PID $lock_content 已失效 → 删除过期锁。"
             rm -f "$LOCKFILE"
             return
         fi
 
-        # PID reuse must never make this script treat an unrelated process as a
-        # rewards run, much less terminate it as "stuck".
+        # PID 重用绝不能让此脚本将不相关的进程视为奖励运行，
+        # 更不能将其作为"卡住"进程终止。
         if ! is_run_daily_process "$lock_content"; then
-            echo "[$(date)] [run_daily.sh] Lockfile PID $lock_content is not run_daily.sh → removing stale lock."
+            echo "[$(date)] [run_daily.sh] 锁文件 PID $lock_content 不是 run_daily.sh → 删除过期锁。"
             rm -f "$LOCKFILE"
         fi
     fi
 }
 
 # -------------------------------
-#  Function: Acquire lock
+#  功能：获取锁
 # -------------------------------
 acquire_lock() {
     local max_attempts=5
@@ -85,49 +85,49 @@ acquire_lock() {
     local existing_pid="unknown"
 
     if ! is_positive_integer "$timeout_hours"; then
-        echo "[$(date)] [run_daily.sh] ERROR: STUCK_PROCESS_TIMEOUT_HOURS must be a positive integer." >&2
+        echo "[$(date)] [run_daily.sh] 错误：STUCK_PROCESS_TIMEOUT_HOURS 必须为正整数。" >&2
         return 2
     fi
     timeout_seconds=$((timeout_hours * 3600))
 
     while [ $attempt -lt $max_attempts ]; do
-        # Try to create lock with current PID
+        # 尝试用当前 PID 创建锁
         if (set -C; echo "$$" > "$LOCKFILE") 2>/dev/null; then
-            echo "[$(date)] [run_daily.sh] Lock acquired successfully (PID: $$)"
+            echo "[$(date)] [run_daily.sh] 锁获取成功 (PID: $$)"
             return 0
         fi
 
-        # Lock exists, validate it
+        # 锁已存在，验证它
         if [ -f "$LOCKFILE" ]; then
             existing_pid=$(<"$LOCKFILE" || echo "")
 
-            echo "[$(date)] [run_daily.sh] Lock file exists with PID: '$existing_pid'"
+            echo "[$(date)] [run_daily.sh] 锁文件存在，PID: '$existing_pid'"
 
-            # If lockfile content is invalid → delete and retry
+            # 锁文件内容无效 → 删除并重试
             if [[ -z "$existing_pid" || ! "$existing_pid" =~ ^[0-9]+$ ]]; then
-                echo "[$(date)] [run_daily.sh] Removing invalid lockfile → retrying..."
+                echo "[$(date)] [run_daily.sh] 删除无效锁文件 → 重试..."
                 rm -f "$LOCKFILE"
                 continue
             fi
 
-            # If process is dead → delete and retry
+            # 进程已死亡 → 删除并重试
             if ! kill -0 "$existing_pid" 2>/dev/null; then
-                echo "[$(date)] [run_daily.sh] Removing stale lock (dead PID: $existing_pid)"
+                echo "[$(date)] [run_daily.sh] 删除过期锁（已失效 PID: $existing_pid）"
                 rm -f "$LOCKFILE"
                 continue
             fi
 
             if ! is_run_daily_process "$existing_pid"; then
-                echo "[$(date)] [run_daily.sh] Removing stale lock owned by unrelated PID $existing_pid"
+                echo "[$(date)] [run_daily.sh] 删除由无关 PID $existing_pid 持有的过期锁"
                 rm -f "$LOCKFILE"
                 continue
             fi
 
-            # Check process runtime → kill if exceeded timeout
+            # 检查进程运行时间 → 超时则终止
             local process_age
             if process_age=$(ps -o etimes= -p "$existing_pid" 2>/dev/null | tr -d ' '); then
                 if [ "$process_age" -gt "$timeout_seconds" ]; then
-                    echo "[$(date)] [run_daily.sh] Killing stuck process $existing_pid (${process_age}s > ${timeout_hours}h)"
+                    echo "[$(date)] [run_daily.sh] 终止卡住的进程 $existing_pid（${process_age}s > ${timeout_hours}h）"
                     kill -TERM "$existing_pid" 2>/dev/null || true
                     sleep 5
                     kill -KILL "$existing_pid" 2>/dev/null || true
@@ -137,17 +137,17 @@ acquire_lock() {
             fi
         fi
 
-        echo "[$(date)] [run_daily.sh] Lock held by PID $existing_pid, attempt $((attempt + 1))/$max_attempts"
+        echo "[$(date)] [run_daily.sh] 锁由 PID $existing_pid 持有，第 $((attempt + 1))/$max_attempts 次尝试"
         sleep 2
         attempt=$((attempt + 1))
     done
 
-    echo "[$(date)] [run_daily.sh] Could not acquire lock after $max_attempts attempts; exiting."
+    echo "[$(date)] [run_daily.sh] $max_attempts 次尝试后仍无法获取锁；退出。"
     return 1
 }
 
 # -------------------------------
-#  Function: Release lock
+#  功能：释放锁
 # -------------------------------
 release_lock() {
     if [ -f "$LOCKFILE" ]; then
@@ -155,26 +155,25 @@ release_lock() {
         lock_pid=$(<"$LOCKFILE")
         if [ "$lock_pid" = "$$" ]; then
             rm -f "$LOCKFILE"
-            echo "[$(date)] [run_daily.sh] Lock released (PID: $$)"
+            echo "[$(date)] [run_daily.sh] 锁已释放 (PID: $$)"
         fi
     fi
 }
 
-# Always release the lock on exit, including interrupt/termination paths.
+# 退出时始终释放锁，包括中断/终止路径。
 trap release_lock EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
 # -------------------------------
-#  MAIN EXECUTION FLOW
+#  主执行流程
 # -------------------------------
-echo "[$(date)] [run_daily.sh] Current process PID: $$"
+echo "[$(date)] [run_daily.sh] 当前进程 PID: $$"
 
-# Self-heal any broken or empty locks before proceeding
+# 继续之前先自愈任何损坏或空的锁
 self_heal_lockfile
 
-# Attempt to acquire the lock safely. A held lock is a clean skip; invalid
-# scheduler configuration is an error.
+# 尝试安全获取锁。锁被持有是正常跳过；无效的调度器配置是错误。
 if acquire_lock; then
     :
 else
@@ -183,16 +182,16 @@ else
     exit 0
 fi
 
-# Random sleep between MIN and MAX to spread execution
+# 在 MIN 和 MAX 之间随机休眠以分散执行
 MINWAIT=${MIN_SLEEP_MINUTES:-5}
 MAXWAIT=${MAX_SLEEP_MINUTES:-50}
 
 if ! is_nonnegative_integer "$MINWAIT" || ! is_nonnegative_integer "$MAXWAIT"; then
-    echo "[$(date)] [run_daily.sh] ERROR: MIN_SLEEP_MINUTES and MAX_SLEEP_MINUTES must be non-negative integers." >&2
+    echo "[$(date)] [run_daily.sh] 错误：MIN_SLEEP_MINUTES 和 MAX_SLEEP_MINUTES 必须为非负整数。" >&2
     exit 1
 fi
 if [ "$MAXWAIT" -lt "$MINWAIT" ]; then
-    echo "[$(date)] [run_daily.sh] ERROR: MAX_SLEEP_MINUTES must be greater than or equal to MIN_SLEEP_MINUTES." >&2
+    echo "[$(date)] [run_daily.sh] 错误：MAX_SLEEP_MINUTES 必须大于或等于 MIN_SLEEP_MINUTES。" >&2
     exit 1
 fi
 
@@ -205,33 +204,33 @@ if [ "${SKIP_RANDOM_SLEEP:-false}" != "true" ]; then
     else
         SLEEPTIME=$((MINWAIT_SEC + RANDOM % (MAXWAIT_SEC - MINWAIT_SEC + 1)))
     fi
-    echo "[$(date)] [run_daily.sh] Sleeping for $((SLEEPTIME/60)) minutes ($SLEEPTIME seconds)"
+    echo "[$(date)] [run_daily.sh] 休眠 $((SLEEPTIME/60)) 分钟（$SLEEPTIME 秒）"
     sleep "$SLEEPTIME"
 else
-    echo "[$(date)] [run_daily.sh] Skipping random sleep"
+    echo "[$(date)] [run_daily.sh] 跳过随机休眠"
 fi
 
-# Start the actual script
-echo "[$(date)] [run_daily.sh] Starting script..."
+# 启动实际脚本
+echo "[$(date)] [run_daily.sh] 正在启动脚本..."
 run_status=0
 if [ "${API_MODE:-false}" = "true" ]; then
-    # API-integrated mode: delegate to the API server so the dashboard has full
-    # visibility and control.  trigger.js calls POST /start and waits for idle.
+    # API 集成模式：委托给 API 服务器，使仪表板具有完整的可见性和控制权。
+    # trigger.js 调用 POST /start 并等待空闲状态。
     if node scripts/api/trigger.js; then
-        echo "[$(date)] [run_daily.sh] Script completed successfully (via API)."
+        echo "[$(date)] [run_daily.sh] 脚本运行成功（通过 API）。"
     else
-        echo "[$(date)] [run_daily.sh] ERROR: Script failed (via API)!" >&2
+        echo "[$(date)] [run_daily.sh] 错误：脚本运行失败（通过 API）！" >&2
         run_status=1
     fi
 else
     if npm start; then
-        echo "[$(date)] [run_daily.sh] Script completed successfully."
+        echo "[$(date)] [run_daily.sh] 脚本运行成功。"
     else
-        echo "[$(date)] [run_daily.sh] ERROR: Script failed!" >&2
+        echo "[$(date)] [run_daily.sh] 错误：脚本运行失败！" >&2
         run_status=1
     fi
 fi
 
-echo "[$(date)] [run_daily.sh] Script finished"
-# Lock is released automatically via trap
+echo "[$(date)] [run_daily.sh] 脚本执行结束"
+# 锁通过 trap 自动释放
 exit "$run_status"

@@ -63,7 +63,8 @@
     "experimental": {
         "apiSearch": false,
         "apiSearchOnBing": false,
-        "blockMedia": false
+        "blockMedia": false,
+        "edgeBrowsing": false
     },
     "debugLogs": false,
     "consoleLogFilter": {
@@ -95,6 +96,14 @@
             "title": "Microsoft-Rewards-Script",
             "tags": ["bot", "notify"],
             "priority": 3
+        },
+        "pushplus": {
+            "enabled": false,
+            "token": "",
+            "title": "Microsoft-Rewards-Script",
+            "template": "txt",
+            "channel": "",
+            "webhook": ""
         },
         "webhookLogFilter": {
             "enabled": false,

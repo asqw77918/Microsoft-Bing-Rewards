@@ -99,6 +99,16 @@ const WebhookSchema = z.object({
             chatId: z.string()
         })
         .optional(),
+    pushplus: z
+        .object({
+            enabled: z.boolean().optional(),
+            token: z.string(),
+            title: z.string().optional(),
+            template: z.string().optional(),
+            channel: z.string().optional(),
+            webhook: z.string().optional()
+        })
+        .optional(),
     webhookLogFilter: LogFilterSchema
 })
 
@@ -150,9 +160,10 @@ export const ConfigSchema = z.object({
         .object({
             apiSearch: z.boolean().default(false),
             apiSearchOnBing: z.boolean().default(false),
-            blockMedia: z.boolean().default(false)
+            blockMedia: z.boolean().default(false),
+            edgeBrowsing: z.boolean().default(false)
         })
-        .default({ apiSearch: false, apiSearchOnBing: false, blockMedia: false }),
+        .default({ apiSearch: false, apiSearchOnBing: false, blockMedia: false, edgeBrowsing: false }),
     debugLogs: z.boolean(),
     proxy: z.object({
         queryEngine: z.boolean(),
@@ -290,7 +301,8 @@ const defaultConfig: Config = {
     experimental: {
         apiSearch: false,
         apiSearchOnBing: false,
-        blockMedia: false
+        blockMedia: false,
+        edgeBrowsing: false
     },
     debugLogs: false,
     proxy: { queryEngine: true, ignoreCertificateErrors: false },
@@ -338,7 +350,7 @@ function fillMissing(data: unknown, defaults: unknown, path = ''): unknown {
     if (!isPlainObject(defaults)) return data
     if (!isPlainObject(data)) {
         if (data === undefined) {
-            console.warn(`[Config] WARN: "${path || '<root>'}" missing, using default`)
+            console.warn(`[配置] 警告: "${path || '<root>'}" 缺失，使用默认值`)
             return defaults
         }
         return data
@@ -347,7 +359,7 @@ function fillMissing(data: unknown, defaults: unknown, path = ''): unknown {
     for (const key of Object.keys(defaults)) {
         const p = path ? `${path}.${key}` : key
         if (!(key in result)) {
-            console.warn(`[Config] WARN: "${p}" not found, using default: ${JSON.stringify(defaults[key])}`)
+            console.warn(`[配置] 警告: "${p}" 未找到，使用默认值: ${JSON.stringify(defaults[key])}`)
             result[key] = defaults[key]
         } else if (isPlainObject(defaults[key])) {
             result[key] = fillMissing(result[key], defaults[key], p)
@@ -365,14 +377,14 @@ export function validateConfig(data: unknown): Config {
     for (const issue of result.error.issues) {
         const def = getByPath(defaultConfig, issue.path as (string | number)[])
         console.warn(
-            `[Config] WARN: "${issue.path.join('.') || '<root>'}" invalid (${issue.message}), using default: ${JSON.stringify(def)}`
+            `[配置] 警告: "${issue.path.join('.') || '<root>'}" 无效 (${issue.message})，使用默认值: ${JSON.stringify(def)}`
         )
         patched = setByPath(patched, issue.path as (string | number)[], def)
     }
     result = ConfigSchema.safeParse(patched)
     if (!result.success) {
-        console.error('[Config] still invalid after applying defaults:', result.error.issues)
-        throw new Error('Config validation failed')
+        console.error('[配置] 应用默认值后仍然无效:', result.error.issues)
+        throw new Error('配置验证失败')
     }
     return result.data as Config
 }
@@ -385,19 +397,19 @@ export function validateAccounts(data: unknown): Account[] {
         const path = issue.path.join('.') || '<root>'
         if (issue.code === 'invalid_type') {
             if (issue.input === undefined) {
-                console.error(`[Accounts] "${path}" is missing (expected ${issue.expected})`)
+                console.error(`[账号] "${path}" 缺失 (期望 ${issue.expected})`)
             } else {
                 console.error(
-                    `[Accounts] "${path}" has wrong type: expected ${issue.expected}, got ${typeof issue.input}`
+                    `[账号] "${path}" 类型错误: 期望 ${issue.expected}，实际得到 ${typeof issue.input}`
                 )
             }
         } else if (issue.code === 'invalid_union') {
-            console.error(`[Accounts] "${path}" does not match any allowed type: ${issue.message}`)
+            console.error(`[账号] "${path}" 不匹配任何允许的类型: ${issue.message}`)
         } else {
-            console.error(`[Accounts] "${path}" ${issue.message} (code: ${issue.code})`)
+            console.error(`[账号] "${path}" ${issue.message} (代码: ${issue.code})`)
         }
     }
-    throw new Error(`Accounts validation failed: ${result.error.issues.length} issue(s) - see logs above`)
+    throw new Error(`账号验证失败: ${result.error.issues.length} 个问题 - 请查看上方日志`)
 }
 
 export function checkNodeVersion(): void {
@@ -405,16 +417,16 @@ export function checkNodeVersion(): void {
         const requiredVersion = pkg.engines?.node
 
         if (!requiredVersion) {
-            console.warn('[Validator] WARN: No Node.js version requirement found in package.json "engines" field.')
+            console.warn('[验证器] 警告: package.json 的 "engines" 字段中未找到 Node.js 版本要求。')
             return
         }
 
         if (!semver.satisfies(process.version, requiredVersion)) {
-            console.error(`Current Node.js version ${process.version} does not satisfy requirement: ${requiredVersion}`)
+            console.error(`当前 Node.js 版本 ${process.version} 不满足要求: ${requiredVersion}`)
             process.exit(1)
         }
     } catch (error) {
-        console.error('Failed to validate Node.js version:', error)
+        console.error('验证 Node.js 版本失败:', error)
         process.exit(1)
     }
 }

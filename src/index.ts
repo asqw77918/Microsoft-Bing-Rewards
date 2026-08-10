@@ -20,16 +20,15 @@ import { normalizeCountry, resolveAccountLocale } from './util/Locale'
 import type { AccountLocale } from './util/Locale'
 
 import { Login } from './browser/auth/Login'
-import { Workers } from './functions/Workers'
 import Activities from './functions/Activities'
-import { SearchManager } from './functions/SearchManager'
-import { PunchcardManager } from './functions/PunchcardManager'
+import { SearchManager } from './functions/activities/search/SearchManager'
 
 import type { Account } from './interface/Account'
 import HttpClient from './util/Http'
 import { sendDiscord, flushDiscordQueue } from './logging/Discord'
 import { sendNtfy, flushNtfyQueue } from './logging/Ntfy'
 import { sendTelegram, flushTelegramQueue } from './logging/Telegram'
+import { sendPushPlus, flushPushPlusQueue } from './logging/PushPlus'
 import type { DashboardData } from './interface/DashboardData'
 import type { AppDashboardData } from './interface/AppDashBoardData'
 import type { AppEarnablePoints } from './interface/Points'
@@ -65,7 +64,12 @@ export function getCurrentContext(): ExecutionContext {
 }
 
 async function flushAllWebhooks(timeoutMs = 5000): Promise<void> {
-    await Promise.allSettled([flushDiscordQueue(timeoutMs), flushNtfyQueue(timeoutMs), flushTelegramQueue(timeoutMs)])
+    await Promise.allSettled([
+        flushDiscordQueue(timeoutMs),
+        flushNtfyQueue(timeoutMs),
+        flushTelegramQueue(timeoutMs),
+        flushPushPlusQueue(timeoutMs)
+    ])
     closeSessionStore()
 }
 
@@ -110,9 +114,7 @@ export class MicrosoftRewardsBot {
     private exitedWorkers: number[]
     private browserFactory: Browser = new Browser(this)
     private accounts: Account[]
-    public workers: Workers
     private searchManager: SearchManager
-    private punchcardManager: PunchcardManager
     private login = new Login(this)
 
     public http!: HttpClient
@@ -132,9 +134,7 @@ export class MicrosoftRewardsBot {
         this.accounts = []
         this.cookies = { mobile: [], desktop: [] }
         this.utils = new Utils()
-        this.workers = new Workers(this)
         this.searchManager = new SearchManager(this)
-        this.punchcardManager = new PunchcardManager(this)
         this.browser = {
             func: new BrowserFunc(this),
             utils: new BrowserUtils(this),
@@ -164,7 +164,7 @@ export class MicrosoftRewardsBot {
             this.logger.debug(
                 this.isMobile,
                 'CONTEXT-REFRESH',
-                `Cannot refresh rewards context | reason=${reason} | account=unavailable`
+                `无法刷新奖励上下文 | 原因=${reason} | 账号=不可用`
             )
             return false
         }
@@ -173,7 +173,7 @@ export class MicrosoftRewardsBot {
             this.logger.warn(
                 this.isMobile,
                 'CONTEXT-REFRESH',
-                `Refreshing rewards browser context after request failure | reason=${reason}`
+                `请求失败后正在刷新奖励浏览器上下文 | 原因=${reason}`
             )
 
             if (!page || page.isClosed()) {
@@ -206,7 +206,7 @@ export class MicrosoftRewardsBot {
             this.logger.info(
                 this.isMobile,
                 'CONTEXT-REFRESH',
-                `Rewards context refreshed successfully | cookies=${refreshedCookies.length}`,
+                `奖励上下文刷新成功 | cookies=${refreshedCookies.length}`,
                 'green'
             )
             refreshSucceeded = true
@@ -215,7 +215,7 @@ export class MicrosoftRewardsBot {
             this.logger.error(
                 this.isMobile,
                 'CONTEXT-REFRESH',
-                `Rewards context refresh failed | reason=${reason} | message=${error instanceof Error ? error.message : String(error)}`
+                `奖励上下文刷新失败 | 原因=${reason} | 错误信息=${error instanceof Error ? error.message : String(error)}`
             )
             return false
         } finally {
@@ -233,19 +233,29 @@ export class MicrosoftRewardsBot {
     // Move to utils
     private warnExperimental(): void {
         const exp = this.config.experimental
-        const enabled = [exp.apiSearch && 'apiSearch', exp.apiSearchOnBing && 'apiSearchOnBing'].filter(
+        const searchFeatures = [exp.apiSearch && 'apiSearch', exp.apiSearchOnBing && 'apiSearchOnBing'].filter(
             Boolean
         ) as string[]
-        if (!enabled.length) return
 
-        this.logger.warn(
-            'main',
-            'EXPERIMENTAL',
-            `${enabled.join(' + ')} enabled - these perform searches over HTTP with no real browser. ` +
-                `This path is EXPERIMENTAL and UNSAFE and may get your account flagged or banned. ` +
-                `Disable it under config.experimental if you are unsure.`,
-            'redBright'
-        )
+        if (searchFeatures.length) {
+            this.logger.warn(
+                'main',
+                'EXPERIMENTAL',
+                `已启用 ${searchFeatures.join(' + ')} - 这些功能通过 HTTP 执行搜索，无需真实浏览器。` +
+                    `此路径是实验性的且不安全的，可能导致您的账号被标记或封禁。` +
+                    `如不确定，请在 config.experimental 中禁用。`,
+                'redBright'
+            )
+        }
+
+        if (exp.edgeBrowsing) {
+            this.logger.warn(
+                'main',
+                'EXPERIMENTAL',
+                '已启用 edgeBrowsing - Edge 浏览活动将在后台通过 HTTP 上报。' +
+                    '此集成是实验性的；如果行为异常，请在 config.experimental 中禁用。'
+            )
+        }
     }
 
     async run(): Promise<void> {
@@ -255,7 +265,7 @@ export class MicrosoftRewardsBot {
         this.logger.info(
             'main',
             'RUN-START',
-            `Starting Microsoft Rewards Script | v${pkg.version} | Accounts: ${totalAccounts} | Clusters: ${this.config.clusters}`
+            `开始运行 Microsoft Rewards 脚本 | v${pkg.version} | 账号数: ${totalAccounts} | 集群数: ${this.config.clusters}`
         )
 
         if (this.config.clusters > 1) {
@@ -270,7 +280,7 @@ export class MicrosoftRewardsBot {
     }
 
     private async runMaster(runStartTime: number): Promise<void> {
-        void this.logger.info('main', 'CLUSTER-PRIMARY', `Primary process started | PID: ${process.pid}`)
+        void this.logger.info('main', 'CLUSTER-PRIMARY', `主进程已启动 | PID: ${process.pid}`)
 
         const rawChunks = this.utils.chunkArray(this.accounts, this.config.clusters)
         const accountChunks = rawChunks.filter(c => c && c.length > 0)
@@ -306,6 +316,9 @@ export class MicrosoftRewardsBot {
                     if (webhook.telegram?.enabled && webhook.telegram.botToken && webhook.telegram.chatId) {
                         sendTelegram(webhook.telegram, content, level)
                     }
+                    if (webhook.pushplus?.enabled && webhook.pushplus.token) {
+                        sendPushPlus(webhook.pushplus, content, level)
+                    }
                 }
             })
         }
@@ -328,7 +341,7 @@ export class MicrosoftRewardsBot {
             this.logger.warn(
                 'main',
                 'CLUSTER-WORKER-EXIT',
-                `Worker ${pid} exit | Code: ${code ?? 'n/a'} | Signal: ${signal ?? 'n/a'} | Active workers: ${this.activeWorkers}`
+                `工作进程 ${pid} 退出 | 退出码: ${code ?? '无'} | 信号: ${signal ?? '无'} | 活跃工作进程: ${this.activeWorkers}`
             )
 
             if (this.activeWorkers <= 0) {
@@ -340,7 +353,7 @@ export class MicrosoftRewardsBot {
                 this.logger.info(
                     'main',
                     'RUN-END',
-                    `Completed all accounts | accountsProcessed=${allAccountStats.length} | pointsGained=${totalCollectedPoints} | previousBalance=${totalInitialPoints} | currentBalance=${totalFinalPoints} | runtimeMinutes=${totalDurationMinutes}`,
+                    `所有账号处理完成 | 已处理账号数=${allAccountStats.length} | 获得积分=${totalCollectedPoints} | 之前余额=${totalInitialPoints} | 当前余额=${totalFinalPoints} | 运行时间(分钟)=${totalDurationMinutes}`,
                     'green'
                 )
 
@@ -356,18 +369,18 @@ export class MicrosoftRewardsBot {
 
         cluster.on('disconnect', worker => {
             const pid = worker.process?.pid
-            this.logger.warn('main', 'CLUSTER-WORKER-DISCONNECT', `Worker ${pid ?? '?'} disconnected`)
+            this.logger.warn('main', 'CLUSTER-WORKER-DISCONNECT', `工作进程 ${pid ?? '?'} 已断开连接`)
         })
     }
 
     private runWorker(runStartTimeFromMaster?: number): void {
-        void this.logger.info('main', 'CLUSTER-WORKER-START', `Worker spawned | PID: ${process.pid}`)
+        void this.logger.info('main', 'CLUSTER-WORKER-START', `工作进程已创建 | PID: ${process.pid}`)
 
         process.on('message', async ({ chunk, runStartTime }: { chunk: Account[]; runStartTime: number }) => {
             void this.logger.info(
                 'main',
                 'CLUSTER-WORKER-TASK',
-                `Worker ${process.pid} received ${chunk.length} accounts.`
+                `工作进程 ${process.pid} 收到 ${chunk.length} 个账号。`
             )
 
             try {
@@ -383,7 +396,7 @@ export class MicrosoftRewardsBot {
                 this.logger.error(
                     'main',
                     'CLUSTER-WORKER-ERROR',
-                    `Worker task crash: ${error instanceof Error ? error.message : String(error)}`
+                    `工作进程任务崩溃: ${error instanceof Error ? error.message : String(error)}`
                 )
 
                 await flushAllWebhooks()
@@ -415,8 +428,8 @@ export class MicrosoftRewardsBot {
                 this.logger.info(
                     'main',
                     'ACCOUNT-START',
-                    `Starting account: ${accountEmail} | geoLocale: ${account.geoLocale} | locale: ${this.accountLocale.locale}${
-                        cachedRegion ? ` | cachedRegion: ${cachedRegion}` : ''
+                    `开始处理账号: ${accountEmail} | 地区: ${account.geoLocale} | 语言: ${this.accountLocale.locale}${
+                        cachedRegion ? ` | 缓存地区: ${cachedRegion}` : ''
                     }`
                 )
 
@@ -430,7 +443,7 @@ export class MicrosoftRewardsBot {
                     void this.logger.error(
                         true,
                         'FLOW',
-                        `Mobile flow failed for ${accountEmail}: ${error instanceof Error ? error.message : String(error)}`
+                        `账号 ${accountEmail} 的移动端流程失败: ${error instanceof Error ? error.message : String(error)}`
                     )
                     return undefined
                 })
@@ -454,7 +467,7 @@ export class MicrosoftRewardsBot {
                     this.logger.info(
                         'main',
                         'ACCOUNT-END',
-                        `Completed account: ${accountEmail} | pointsGained=${collectedPoints} | previousBalance=${accountInitialPoints} | currentBalance=${accountFinalPoints} | durationSeconds=${durationSeconds}`,
+                        `账号处理完成: ${accountEmail} | 获得积分=${collectedPoints} | 之前余额=${accountInitialPoints} | 当前余额=${accountFinalPoints} | 耗时(秒)=${durationSeconds}`,
                         'green'
                     )
                 } else {
@@ -473,7 +486,7 @@ export class MicrosoftRewardsBot {
                 this.logger.error(
                     'main',
                     'ACCOUNT-ERROR',
-                    `${accountEmail}: ${error instanceof Error ? error.message : String(error)}`
+                    `账号处理失败: ${accountEmail} | 错误: ${error instanceof Error ? error.message : String(error)}`
                 )
 
                 accountStats.push({
@@ -547,8 +560,8 @@ export class MicrosoftRewardsBot {
         this.logger.info('main', 'FLOW', `Starting session for ${accountEmail}`)
 
         // Drop cookies and app credentials from the previous account
-        this.browser.func.resetHttpJars()
         this.accessToken = ''
+        this.cookies = { mobile: [], desktop: [] }
 
         const apiSearch = this.config.experimental.apiSearch
         const apiSearchOnBing = this.config.experimental.apiSearchOnBing
@@ -556,6 +569,9 @@ export class MicrosoftRewardsBot {
 
         let mobileSession: BrowserSession | null = null
         let desktopSession: BrowserSession | null = null
+        const edgeBrowsingController = new AbortController()
+        let edgeBrowsingTask: Promise<void> | null = null
+        let edgeBrowsingFinished = false
 
         const closeMobileSession = async (): Promise<void> => {
             const session = mobileSession
@@ -585,7 +601,7 @@ export class MicrosoftRewardsBot {
                 const initialContext: BrowserContext = mobileSession.context
                 this.mainMobilePage = await initialContext.newPage()
 
-                this.logger.info('main', 'BROWSER', `Mobile Browser started | ${accountEmail}`)
+                this.logger.info('main', 'BROWSER', `移动端浏览器已启动 | ${accountEmail}`)
 
                 await this.login.login(this.mainMobilePage, account)
 
@@ -595,7 +611,7 @@ export class MicrosoftRewardsBot {
                     this.logger.error(
                         'main',
                         'FLOW',
-                        `Failed to get mobile access token: ${error instanceof Error ? error.message : String(error)}`
+                        `获取移动端访问令牌失败: ${error instanceof Error ? error.message : String(error)}`
                     )
                     this.accessToken = ''
                 }
@@ -609,7 +625,7 @@ export class MicrosoftRewardsBot {
                     this.logger.info(
                         'main',
                         'FLOW',
-                        'Mobile login browser closed; continuing with the saved session and HTTP requests'
+                        '移动端登录浏览器已关闭；继续使用保存的会话和 HTTP 请求'
                     )
                 }
 
@@ -623,8 +639,8 @@ export class MicrosoftRewardsBot {
                         this.logger.warn(
                             'main',
                             'GEO-LOCALE',
-                            `Microsoft profile returned an invalid country; retaining ${
-                                this.accountLocale.country ?? 'US fallback'
+                            `Microsoft 配置文件返回了无效的国家/地区；保留 ${
+                                this.accountLocale.country ?? '美国(默认)'
                             }`
                         )
                     }
@@ -646,7 +662,7 @@ export class MicrosoftRewardsBot {
                         this.logger.warn(
                             'main',
                             'LOGIN-APP',
-                            `App dashboard unavailable - app activities will be skipped this run | message=${error instanceof Error ? error.message : String(error)}`
+                            `应用仪表板不可用 - 本次运行将跳过应用活动 | 错误信息=${error instanceof Error ? error.message : String(error)}`
                         )
                         this.accessToken = ''
                     }
@@ -666,22 +682,21 @@ export class MicrosoftRewardsBot {
                         this.logger.warn(
                             'main',
                             'LOGIN-APP',
-                            `App earnable-points lookup failed - app activities will be skipped this run | message=${error instanceof Error ? error.message : String(error)}`
+                            `应用可获取积分查询失败 - 本次运行将跳过应用活动 | 错误信息=${error instanceof Error ? error.message : String(error)}`
                         )
                         this.accessToken = ''
                         appData = null
                     }
                 }
 
-                const pointsCanCollect = browserEarnable.mobileSearchPoints + (appEarnable?.totalEarnablePoints ?? 0)
                 const appAvailable = Boolean(this.accessToken && appData)
 
                 this.logger.info(
                     'main',
                     'POINTS',
-                    `Earnable today | Mobile: ${pointsCanCollect} | Browser: ${
-                        browserEarnable.mobileSearchPoints
-                    } | App: ${appEarnable?.totalEarnablePoints ?? 0} | ${accountEmail} | locale: ${this.accountLocale.locale}`
+                    `今日可获取积分 | 移动端: ${browserEarnable.mobileSearchPoints} | 桌面端: ${
+                        browserEarnable.desktopSearchPoints
+                    } | 应用: ${appEarnable?.totalEarnablePoints ?? 0} | ${accountEmail} | 语言: ${this.accountLocale.locale}`
                 )
 
                 const parallel = this.config.searchSettings.parallelSearching
@@ -692,11 +707,28 @@ export class MicrosoftRewardsBot {
                 let desktopPoints = 0
                 let bonusPoints = 0
 
+                if (this.config.experimental.edgeBrowsing) {
+                    edgeBrowsingTask = this.activities
+                        .doEdgeBrowsing(edgeBrowsingController.signal)
+                        .catch(error => {
+                            this.logger.error(
+                                this.isMobile,
+                                'EDGE-BROWSING',
+                                `后台任务意外失败 | 错误信息=${
+                                    error instanceof Error ? error.message : String(error)
+                                }`
+                            )
+                        })
+                        .finally(() => {
+                            edgeBrowsingFinished = true
+                        })
+                }
+
                 if (fullApi) {
                     if (this.config.ensureStreakProtection) {
                         await this.activities.doEnsureStreakProtection()
                     }
-                    if (this.config.workers.doPunchCards) await this.punchcardManager.runMobile(data)
+                    if (this.config.workers.doPunchCards) await this.activities.doPunchCardsMobile(data)
                     if (this.config.workers.doActivateSearchPerk) await this.activities.doActivateSearchPerk(data)
 
                     const plan = await this.searchManager.getSearchPoints()
@@ -707,17 +739,17 @@ export class MicrosoftRewardsBot {
                     if (desktopBrowserNeeded) {
                         await executionContext.run({ isMobile: false, account }, async () => {
                             desktopSession = await this.createDesktopSession(account)
-                            await this.punchcardManager.runDesktop()
+                            await this.activities.doPunchCardsDesktop()
                             if (doVisualSearch) await this.activities.doVisualSearch(data)
                         })
                         await closeDesktopSession()
                     }
 
-                    if (this.config.workers.doDailySet) await this.workers.doDailySet(data)
-                    if (this.config.workers.doMorePromotions) await this.workers.doMorePromotions(data)
+                    if (this.config.workers.doDailySet) await this.activities.doDailySet(data)
+                    if (this.config.workers.doMorePromotions) await this.activities.doMorePromotions(data)
                     if (appAvailable && this.config.workers.doDailyCheckIn) await this.activities.doDailyCheckIn()
                     if (appAvailable && this.config.workers.doAppPromotions && appData)
-                        await this.workers.doAppPromotions(appData)
+                        await this.activities.doAppPromotions(appData)
                     if (appAvailable && this.config.workers.doReadToEarn) await this.activities.doReadToEarn()
 
                     if (doMobileSearch) mobilePoints = await this.searchManager.searchMobile(account)
@@ -727,14 +759,14 @@ export class MicrosoftRewardsBot {
                     if (this.config.ensureStreakProtection) {
                         await this.activities.doEnsureStreakProtection()
                     }
-                    if (this.config.workers.doDailySet) await this.workers.doDailySet(data)
+                    if (this.config.workers.doDailySet) await this.activities.doDailySet(data)
                     if (this.config.workers.doActivateSearchPerk) await this.activities.doActivateSearchPerk(data)
-                    if (this.config.workers.doMorePromotions) await this.workers.doMorePromotions(data)
+                    if (this.config.workers.doMorePromotions) await this.activities.doMorePromotions(data)
                     if (appAvailable && this.config.workers.doDailyCheckIn) await this.activities.doDailyCheckIn()
                     if (appAvailable && this.config.workers.doAppPromotions && appData)
-                        await this.workers.doAppPromotions(appData)
+                        await this.activities.doAppPromotions(appData)
                     if (appAvailable && this.config.workers.doReadToEarn) await this.activities.doReadToEarn()
-                    if (this.config.workers.doPunchCards) await this.punchcardManager.runMobile(data)
+                    if (this.config.workers.doPunchCards) await this.activities.doPunchCardsMobile(data)
 
                     const plan = await this.searchManager.getSearchPoints()
                     const doMobileSearch = plan.doMobile
@@ -746,7 +778,7 @@ export class MicrosoftRewardsBot {
                     if (parallel && !apiSearch && doMobileSearch && doDesktopSearch) {
                         await executionContext.run({ isMobile: false, account }, async () => {
                             desktopSession = await this.createDesktopSession(account)
-                            await this.punchcardManager.runDesktop()
+                            await this.activities.doPunchCardsDesktop()
                             if (doVisualSearch) await this.activities.doVisualSearch(data)
                         })
 
@@ -780,7 +812,7 @@ export class MicrosoftRewardsBot {
                             await executionContext.run({ isMobile: false, account }, async () => {
                                 desktopSession = await this.createDesktopSession(account)
 
-                                await this.punchcardManager.runDesktop()
+                                await this.activities.doPunchCardsDesktop()
                                 if (doVisualSearch) await this.activities.doVisualSearch(data)
                                 if (doDesktopSearch && !apiSearch) {
                                     desktopPoints = await this.searchManager.searchDesktop(account)
@@ -798,12 +830,24 @@ export class MicrosoftRewardsBot {
                 this.logger.info(
                     'main',
                     'SEARCH-MANAGER',
-                    `Search summary | mobile=${mobilePoints} | desktop=${desktopPoints} | bonus=${bonusPoints} | total=${
+                    `搜索汇总 | 移动端=${mobilePoints} | 桌面端=${desktopPoints} | 额外=${bonusPoints} | 总计=${
                         mobilePoints + desktopPoints + bonusPoints
                     }`
                 )
 
-                if (this.config.workers.doClaimBonusPoints) await this.workers.doClaimBonusPoints()
+                if (this.config.workers.doClaimBonusPoints) await this.activities.doClaimBonusPoints()
+
+                if (edgeBrowsingTask) {
+                    if (!edgeBrowsingFinished) {
+                        this.logger.info(
+                            this.isMobile,
+                            'EDGE-BROWSING',
+                            '前台活动已完成；等待后台 Edge 浏览活动'
+                        )
+                    }
+                    await edgeBrowsingTask
+                    edgeBrowsingTask = null
+                }
 
                 const finalPoints = await this.browser.func.getCurrentPoints()
                 const collectedPoints = finalPoints - initialPoints
@@ -811,7 +855,7 @@ export class MicrosoftRewardsBot {
                 this.logger.info(
                     'main',
                     'FLOW',
-                    `Points collected | pointsGained=${collectedPoints} | currentBalance=${finalPoints} | account=${accountEmail}`
+                    `积分已收集 | 获得积分=${collectedPoints} | 当前余额=${finalPoints} | 账号=${accountEmail}`
                 )
 
                 return {
@@ -820,6 +864,12 @@ export class MicrosoftRewardsBot {
                 }
             })
         } finally {
+            if (edgeBrowsingTask) {
+                edgeBrowsingController.abort()
+                await edgeBrowsingTask
+                edgeBrowsingTask = null
+            }
+
             if (mobileSession) {
                 try {
                     await closeMobileSession()
@@ -827,7 +877,7 @@ export class MicrosoftRewardsBot {
                     this.logger.debug(
                         'main',
                         'CLEANUP',
-                        `Mobile context close failed | ${error instanceof Error ? error.message : String(error)}`
+                        `移动端上下文关闭失败 | ${error instanceof Error ? error.message : String(error)}`
                     )
                 }
             }
@@ -839,7 +889,7 @@ export class MicrosoftRewardsBot {
                     this.logger.debug(
                         'main',
                         'CLEANUP',
-                        `Desktop context close failed | ${error instanceof Error ? error.message : String(error)}`
+                        `桌面端上下文关闭失败 | ${error instanceof Error ? error.message : String(error)}`
                     )
                 }
             }
@@ -857,12 +907,12 @@ async function main(): Promise<void> {
         void flushAllWebhooks()
     })
     process.on('SIGINT', async () => {
-        rewardsBot.logger.warn('main', 'PROCESS', 'SIGINT received, flushing and exiting...')
+        rewardsBot.logger.warn('main', 'PROCESS', '收到 SIGINT 信号，正在刷新并退出...')
         await flushAllWebhooks()
         process.exit(130)
     })
     process.on('SIGTERM', async () => {
-        rewardsBot.logger.warn('main', 'PROCESS', 'SIGTERM received, flushing and exiting...')
+        rewardsBot.logger.warn('main', 'PROCESS', '收到 SIGTERM 信号，正在刷新并退出...')
         await flushAllWebhooks()
         process.exit(143)
     })
@@ -871,7 +921,7 @@ async function main(): Promise<void> {
             rewardsBot.logger.debug(
                 'main',
                 'UNCAUGHT-EXCEPTION',
-                `Ignoring benign browser-closed error during teardown | ${error instanceof Error ? error.message : String(error)}`
+                `忽略清理期间的浏览器关闭错误 | ${error instanceof Error ? error.message : String(error)}`
             )
             return
         }
@@ -884,7 +934,7 @@ async function main(): Promise<void> {
             rewardsBot.logger.debug(
                 'main',
                 'UNHANDLED-REJECTION',
-                `Ignoring benign browser-closed rejection during teardown | ${reason instanceof Error ? reason.message : String(reason)}`
+                `忽略清理期间的浏览器关闭拒绝 | ${reason instanceof Error ? reason.message : String(reason)}`
             )
             return
         }

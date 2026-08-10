@@ -48,6 +48,7 @@ export interface ConfigExperimental {
     apiSearch: boolean
     apiSearchOnBing: boolean
     blockMedia: boolean
+    edgeBrowsing: boolean
 }
 
 export interface ConfigProxy {
@@ -80,6 +81,7 @@ export interface ConfigWebhook {
     discord?: WebhookDiscordConfig
     ntfy?: WebhookNtfyConfig
     telegram?: WebhookTelegramConfig
+    pushplus?: WebhookPushPlusConfig
     webhookLogFilter: LogFilter
 }
 
@@ -110,4 +112,13 @@ export interface WebhookTelegramConfig {
     enabled?: boolean
     botToken: string
     chatId: string | number
+}
+
+export interface WebhookPushPlusConfig {
+    enabled?: boolean
+    token: string
+    title?: string
+    template?: string // 'txt' | 'html' | 'json' | 'markdown'
+    channel?: string // e.g. 'wechat', 'email', 'webhook'
+    webhook?: string // custom webhook URL for channel=webhook
 }

@@ -3,6 +3,7 @@ import cluster from 'cluster'
 import { sendDiscord } from './Discord'
 import { sendNtfy } from './Ntfy'
 import { sendTelegram } from './Telegram'
+import { sendPushPlus } from './PushPlus'
 import type { MicrosoftRewardsBot } from '../index'
 import { errorDiagnostic } from '../util/ErrorDiagnostic'
 import type { LogFilter } from '../interface/Config'
@@ -150,6 +151,11 @@ export class Logger {
             ) {
                 if (level === 'debug') return
                 sendTelegram(config.webhook.telegram, cleanMsg, level)
+            }
+
+            if (config.webhook.pushplus?.enabled && config.webhook.pushplus.token) {
+                if (level === 'debug') return
+                sendPushPlus(config.webhook.pushplus, cleanMsg, level)
             }
         } else {
             process.send?.({ __ipcLog: { content: cleanMsg, level } })
