@@ -1,0 +1,94 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    # 每天 UTC 03:17 运行（北京时间 11:17），可自行调整
+    - cron: '17 3 * * *'
+  # 支持手动触发：Actions 页面点 "Run workflow"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  # 上游仓库地址（fork 的原始仓库），如有变动请修改这里
+  UPSTREAM_REPO: https://github.com/TheNetsky/Microsoft-Rewards-Script.git
+  # 同步目标分支（本仓库主分支）
+  BASE_BRANCH: main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ env.BASE_BRANCH }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # ---------- 第一步：走 GitHub 官方 merge-upstream API（干净合并时直接完成） ----------
+      - name: Try GitHub merge-upstream API (clean fast path)
+        id: api
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          output=$(gh api repos/${{ github.repository }}/merge-upstream -f branch=${{ env.BASE_BRANCH }} 2>&1)
+          code=$?
+          echo "$output"
+          if [ $code -eq 0 ]; then
+            # 干净合并，API 已直接推送到本仓库，任务结束
+            echo "result=clean" >> "$GITHUB_OUTPUT"
+          else
+            # 存在冲突（409），进入手动合并流程
+            echo "result=conflict" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ---------- 第二步：有冲突时，用 ours 策略手动合并并推送同步分支 ----------
+      - name: Manual merge favoring local custom changes (ours)
+        if: steps.api.outputs.result == 'conflict'
+        run: |
+          git remote add upstream "$UPSTREAM_REPO"
+          git fetch upstream
+
+          # 上游默认分支名探测（main 或 master）
+          UPSTREAM_BRANCH=$(git remote show upstream | awk '/HEAD branch/ {print $NF}')
+          echo "Upstream default branch: $UPSTREAM_BRANCH"
+
+          SYNC_BRANCH="upstream-sync/$(date +%Y%m%d)"
+          git checkout -B "$SYNC_BRANCH" origin/${{ env.BASE_BRANCH }}
+
+          # -X ours：冲突的代码块优先保留本仓库（自定义修改）版本，非冲突部分照常合入上游更新
+          git merge -X ours "upstream/$UPSTREAM_BRANCH" --no-edit || true
+
+          # 处理 -X ours 无法自动解决的残余冲突（如 modify/delete），一律以本仓库版本为准
+          CONFLICTED=$(git diff --name-only --diff-filter=U)
+          if [ -n "$CONFLICTED" ]; then
+            echo "$CONFLICTED" | xargs -r git checkout --ours -- 2>/dev/null || true
+            echo "$CONFLICTED" | xargs -r git add --
+            # 本仓库已删除的文件，checkout --ours 会失败，直接删除完成冲突标记
+            git diff --name-only --diff-filter=U | xargs -r git rm -f --
+          fi
+          git commit --no-edit || echo "Nothing to commit"
+
+          git push -f origin "$SYNC_BRANCH"
+          echo "SYNC_BRANCH=$SYNC_BRANCH" >> "$GITHUB_ENV"
+
+      # ---------- 第三步：冲突合并结果开 PR，人工复核后再合入 ----------
+      - name: Create Pull Request for review
+        if: steps.api.outputs.result == 'conflict'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "chore: sync upstream $(date +%Y-%m-%d)" \
+            --body "自动同步上游仓库更新。冲突部分已按【保留本仓库自定义修改】策略（ours）自动解决，请人工复核后合并。" \
+            --head "$SYNC_BRANCH" \
+            --base "${{ env.BASE_BRANCH }}" \
+          || echo "PR 可能已存在，跳过创建"
