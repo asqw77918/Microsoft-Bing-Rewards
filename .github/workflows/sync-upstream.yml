@@ -14,8 +14,8 @@ permissions:
 env:
   # 上游仓库地址（fork 的原始仓库），如有变动请修改这里
   UPSTREAM_REPO: https://github.com/TheNetsky/Microsoft-Rewards-Script.git
-  # 同步目标分支（本仓库主分支）
-  BASE_BRANCH: main
+  # 同步目标分支（本仓库主分支，该 fork 默认分支为 master）
+  BASE_BRANCH: master
 
 jobs:
   sync:
