@@ -1,6 +1,6 @@
 services:
     microsoft-rewards-script:
-        image: ghcr.io/thenetsky/microsoft-rewards-script:4
+        image: ghcr.io/asqw77918/microsoft-rewards-script:4
         # To build locally instead of pulling the prebuilt image, use the build section below.
         #build:
         #    context: .

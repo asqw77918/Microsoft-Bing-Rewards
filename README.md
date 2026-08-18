@@ -1,8 +1,8 @@
 # Microsoft-Rewards-Script（中文 Fork 版）
 
 [![Discord](https://img.shields.io/badge/Join%20Our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8BxYbV4pkj)
-[![Latest Build](https://img.shields.io/github/actions/workflow/status/TheNetsky/Microsoft-Rewards-Script/auto-release.yml?branch=v4&style=for-the-badge&label=Latest%20Build)](https://github.com/TheNetsky/Microsoft-Rewards-Script/actions/workflows/auto-release.yml)
-[![Docker](https://img.shields.io/badge/Docker-GHCR-blue?style=for-the-badge&logo=docker)](https://github.com/TheNetsky/Microsoft-Rewards-Script/pkgs/container/microsoft-rewards-script)
+[![Latest Build](https://img.shields.io/github/actions/workflow/status/asqw77918/Microsoft-Rewards-Script/auto-release.yml?branch=v4&style=for-the-badge&label=Latest%20Build)](https://github.com/asqw77918/Microsoft-Rewards-Script/actions/workflows/auto-release.yml)
+[![Docker](https://img.shields.io/badge/Docker-GHCR-blue?style=for-the-badge&logo=docker)](https://github.com/asqw77918/Microsoft-Rewards-Script/pkgs/container/microsoft-rewards-script)
 
 > [!TIP]
 > 本版本仅支持**新版 Bing Rewards 仪表盘**，**不支持**旧版仪表盘。
@@ -116,7 +116,7 @@ docker compose up -d
 #### 获取脚本
 
 ```bash
-git clone https://github.com/TheNetsky/Microsoft-Rewards-Script.git
+git clone https://github.com/asqw77918/Microsoft-Rewards-Script.git
 cd Microsoft-Rewards-Script
 ```
 
@@ -193,7 +193,7 @@ ACCOUNT_1_PASSWORD=your_password
 ```yaml
 services:
     microsoft-rewards-script:
-        image: ghcr.io/thenetsky/microsoft-rewards-script:4
+        image: ghcr.io/asqw77918/microsoft-rewards-script:4
         container_name: microsoft-rewards-script
         restart: unless-stopped
         volumes:

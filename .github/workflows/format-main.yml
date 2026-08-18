@@ -68,6 +68,21 @@ jobs:
                       Automated formatting repair generated after changes reached `${{ github.ref_name }}`.
 
                       This pull request only contains changes produced by `npm run format`.
+              continue-on-error: true
+
+            - name: Fallback direct commit (if PR creation is unavailable)
+              if: steps.formatting.outputs.changed == 'true' && steps.create_pr.outcome == 'failure'
+              shell: bash
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git add -A
+                  git commit -m 'style: apply automated formatting'
+                  git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:"${{ github.ref_name }}"
+                  {
+                    echo
+                    echo "Formatting was applied via direct commit to \`${{ github.ref_name }}\` (PR creation unavailable — enable \"Allow GitHub Actions to create and approve pull requests\" in repository settings to use PR-based repair)."
+                  } >> "$GITHUB_STEP_SUMMARY"
 
             - name: Report formatting pull request
               if: steps.create_pr.outputs.pull-request-url != ''
