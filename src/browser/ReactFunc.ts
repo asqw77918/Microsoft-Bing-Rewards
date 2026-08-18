@@ -44,6 +44,10 @@ export interface StreakState {
     isCurrentDayCompleted: boolean
     isEnabled: boolean
     dailyPoints: number[]
+    activationOfferId: string | null
+    activationHash: string | null
+    activationActivityType: number | null
+    destinationUrl: string | null
 }
 
 export interface StreakProtectionState {
@@ -276,7 +280,8 @@ export default class ReactFunc {
                     obj.attributes && typeof obj.attributes === 'object'
                         ? (obj.attributes as Record<string, unknown>)
                         : null
-                const activityTypeValue = obj.activityType ?? obj.activity_type ?? attributes?.activity_type
+                const activityTypeValue =
+                    obj.activityType ?? obj.activity_type ?? attributes?.activityType ?? attributes?.activity_type
                 const parsedActivityType = Number(activityTypeValue)
                 const promotionalValue = obj.isPromotional ?? attributes?.promotional
                 const isPromotional =
@@ -366,7 +371,23 @@ export default class ReactFunc {
                     totalDays: (o.totalDays as number) ?? 0,
                     isCurrentDayCompleted: (o.isCurrentDayCompleted as boolean | undefined) === true,
                     isEnabled: (o.isEnabled as boolean | undefined) === true,
-                    dailyPoints: o.dailyPoints as number[]
+                    dailyPoints: o.dailyPoints as number[],
+                    activationOfferId:
+                        typeof o.activationOfferId === 'string' && o.activationOfferId !== '$undefined'
+                            ? o.activationOfferId
+                            : null,
+                    activationHash:
+                        typeof o.activationHash === 'string' && o.activationHash !== '$undefined'
+                            ? o.activationHash
+                            : null,
+                    activationActivityType: (() => {
+                        const parsed = Number(o.activationActivityType)
+                        return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+                    })(),
+                    destinationUrl:
+                        typeof o.destinationUrl === 'string' && o.destinationUrl !== '$undefined'
+                            ? o.destinationUrl
+                            : null
                 }))
 
             // de-dupe on partner
@@ -476,22 +497,29 @@ export default class ReactFunc {
     }
 
     public routerStateTree(segment: string): string {
+        const refreshFlag = 4096
         const tree = [
             '',
             {
                 children: [
                     '(nav)',
                     {
-                        children: [segment, { children: ['__PAGE__', {}, null, null, 0] }, null, null, 0]
+                        children: [
+                            segment,
+                            { children: ['PAGE', {}, null, null, refreshFlag] },
+                            null,
+                            null,
+                            refreshFlag
+                        ]
                     },
                     null,
                     null,
-                    0
+                    refreshFlag
                 ]
             },
             null,
             null,
-            16
+            refreshFlag + 16
         ]
         return encodeURIComponent(JSON.stringify(tree))
     }
@@ -551,27 +579,46 @@ export default class ReactFunc {
         const HEX = '[a-f0-9]{40,64}'
 
         // Framework args that share the call shape but aren't the action name
-        const KNOWN_NON_NAMES = new Set(['callServer', 'findSourceMapURL', 'encodeFormAction'])
+        const KNOWN_NON_NAMES = new Set(['callServer', 'findSourceMapURL', 'encodeFormAction', 'default'])
 
         try {
-            // I hate this so much honestly
-            const callRegex = new RegExp(`createServerReference\\s*\\)?\\s*\\(\\s*"(${HEX})"([\\s\\S]{0,400}?)\\)`, 'g')
+            // Support for both formats: (createServerReference)(id) and createServerReference(id)
+            // The argument search window has been expanded to 800 characters for Turbopack
+            const createRegex = new RegExp(
+                `createServerReference\\s*\\)?\\s*\\(\\s*"(${HEX})"([\\s\\S]{0,800}?)\\)`,
+                'g'
+            )
+            const registerRegex = new RegExp(
+                `registerServerReference\\s*\\)?\\s*\\([^,]+,\\s*"(${HEX})"([\\s\\S]{0,800}?)\\)`,
+                'g'
+            )
+
             const strLitRe = /"([A-Za-z_$][\w$]*)"/g
 
-            for (const m of jsText.matchAll(callRegex)) {
-                const id = m[1]!
-                const argsBlock = m[2] ?? ''
-                all.add(id)
+            const processMatches = (matches: IterableIterator<RegExpMatchArray>) => {
+                for (const m of matches) {
+                    const id = m[1]!
+                    const argsBlock = m[2] ?? ''
+                    all.add(id)
 
-                const candidates = [...argsBlock.matchAll(strLitRe)]
-                    .map(x => x[1]!)
-                    .filter(n => !KNOWN_NON_NAMES.has(n))
-                if (candidates.length) byName[candidates[candidates.length - 1]!] = id
+                    const candidates = [...argsBlock.matchAll(strLitRe)]
+                        .map(x => x[1]!)
+                        .filter(n => !KNOWN_NON_NAMES.has(n) && n.length > 3)
+
+                    if (candidates.length) {
+                        byName[candidates[candidates.length - 1]!] = id
+                    }
+                }
             }
 
-            // bare reference without a name arg, still record the id
-            const bareRegex = new RegExp(`createServerReference\\s*\\)?\\s*\\(\\s*"(${HEX})"`, 'g')
-            for (const m of jsText.matchAll(bareRegex)) all.add(m[1]!)
+            processMatches(jsText.matchAll(createRegex))
+            processMatches(jsText.matchAll(registerRegex))
+
+            const bareCreateRegex = new RegExp(`createServerReference\\s*\\)?\\s*\\(\\s*"(${HEX})"`, 'g')
+            const bareRegisterRegex = new RegExp(`registerServerReference\\s*\\)?\\s*\\([^,]+,\\s*"(${HEX})"`, 'g')
+
+            for (const m of jsText.matchAll(bareCreateRegex)) all.add(m[1]!)
+            for (const m of jsText.matchAll(bareRegisterRegex)) all.add(m[1]!)
 
             const actionIdRe = new RegExp(`\\$ACTION_ID_(${HEX})`, 'g')
             for (const m of jsText.matchAll(actionIdRe)) all.add(m[1]!)
@@ -581,14 +628,6 @@ export default class ReactFunc {
                 'REACT-PARSE',
                 `Extracted action ids | named=${Object.keys(byName).length} | total=${all.size}`
             )
-
-            if (all.size === 0) {
-                this.bot.logger.debug(
-                    this.bot.isMobile,
-                    'REACT-PARSE',
-                    'No server-action ids found in JS chunk - wrong chunk, or bundler output changed'
-                )
-            }
         } catch (error) {
             this.bot.logger.error(
                 this.bot.isMobile,

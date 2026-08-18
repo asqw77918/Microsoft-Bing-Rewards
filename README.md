@@ -369,6 +369,8 @@ curl --request POST \
 
 桌面端和移动端搜索配额独立于仪表盘计数器进行跟踪。所有 `mobileSearch` 条目合并用于移动端配额，所有 `pcSearch` 条目合并用于桌面端执行；明确标识为 Edge 的计数器也会单独显示用于诊断。脚本仅跳过已完成的平台，因此已完成的 `60/60` 移动端配额不会阻止未完成的桌面端配额运行。启用 `parallelSearching` 后，两个未完成的配额可以在各自的浏览器上下文中并发运行。
 
+Desktop and mobile search quotas are tracked independently from the dashboard counters. All `mobileSearch` entries are combined for the mobile quota, while all `pcSearch` entries are combined for desktop execution; a counter explicitly identified as Edge is also shown separately for diagnostics. The script skips only the completed platform, so a completed `60/60` mobile quota does not prevent an incomplete desktop quota from running. With `parallelSearching` enabled, both incomplete quotas can run concurrently in their own browser contexts.
+
 > [!NOTE]
 > \* Docker `CONFIG_*` 数组值为逗号分隔的字符串，例如 `"error,warn"`。正则表达式模式必须直接在 `config.json` 中设置。
 
@@ -462,6 +464,21 @@ RSS 订阅使用点分路径 - `rss` 表示所有订阅，`rss.<站点>` 表示�
 - `experimental`：API 搜索、API SearchOnBing、Edge 浏览及其支持传输
 
 实验性活动与其他活动一起位于 `src/functions/activities/experimental` 下。仅浏览器端的媒体阻止器位于 `src/browser/MediaBlocker.ts`。`BrowserFunc` 仅包含共享的 Rewards/浏览器/会话传输，而非个别搜索或视觉搜索实现。
+
+When `experimental.edgeBrowsing` is enabled, the task starts before the normal activity sequence and runs as a separate Promise alongside Daily Set, promotions, app activities, and searches. If foreground work finishes first, the account remains open until this Promise settles. Accounts without the promotion, an access token, or remaining Edge work are skipped immediately.
+
+#### Activity source layout
+
+Standard activities live under `src/functions/activities`, grouped by responsibility:
+
+- `rewards`: Daily Set, More Promotions, Punch Cards, and shared promotion dispatch
+- `api`: individual Rewards API actions
+- `app`: individual mobile-app activities and App Promotions orchestration
+- `search`: browser search flows, search tracking, and shared SearchOnBing behavior
+- `visualSearch`: the visual-search activity and its browser transport
+- `experimental`: API Search, API SearchOnBing, Edge Browsing, and their supporting transports
+
+Experimental activities live with the other activities under `src/functions/activities/experimental`. The browser-only media blocker lives at `src/browser/MediaBlocker.ts`. `BrowserFunc` contains shared Rewards/browser/session transport only, rather than individual search or visual-search implementations.
 
 > [!NOTE]
 > [Playwright 文档](https://playwright.dev/docs/api/class-browsercontext#browser-context-route)指出，请求路由在激活时会禁用浏览器 HTTP 缓存。启用媒体阻止后，图片密集的页面通常会传输更少的数据，但不保证依赖缓存的网站使用更少的总带宽或加载更快。如果网站依赖图片/媒体加载事件，请保持此选项禁用。

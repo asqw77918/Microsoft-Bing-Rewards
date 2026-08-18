@@ -17,6 +17,7 @@ import type { Account } from '../../interface/Account'
 type LoginState =
     | 'EMAIL_INPUT'
     | 'PASSWORD_INPUT'
+    | 'USE_PASSWORD'
     | 'SIGN_IN_ANOTHER_WAY'
     | 'SIGN_IN_ANOTHER_WAY_EMAIL'
     | 'SIGN_IN_ANOTHER_WAY_PASSWORDLESS'
@@ -24,12 +25,13 @@ type LoginState =
     | 'PASSKEY_VIDEO'
     | 'KMSI_PROMPT'
     | 'LOGGED_IN'
+    | 'EMAIL_VERIFICATION_INPUT'
     | 'RECOVERY_EMAIL_INPUT'
     | 'ACCOUNT_LOCKED'
     | 'ERROR_ALERT'
     | '2FA_TOTP'
     | 'LOGIN_PASSWORDLESS'
-    | 'PRIMARY_SIGN_IN'
+    | 'PASSWORDLESS_SEND_CODE'
     | 'OTP_CODE_ENTRY'
     | 'UNKNOWN'
     | 'CHROMEWEBDATA_ERROR'
@@ -54,11 +56,14 @@ export class Login {
     private readonly selectors = {
         primaryButton: 'button[data-testid="primaryButton"]',
         secondaryButton: 'button[data-testid="secondaryButton"]',
+        usePasswordOption: '[data-testid="viewFooter"] [role="button"]',
         signInTile: '[data-testid="tile"]',
         emailIcon: '[data-testid="tile"]:has(svg path[d*="M5.25 4h13.5a3.25"])',
         emailIconOld: 'img[data-testid="accessibleImg"][src*="picker_verify_email"]',
         passwordlessOptionOld: 'img[data-testid="accessibleImg"][src*="picker_remote_ngc"]',
         recoveryEmail: '[data-testid="proof-confirmation"]',
+        emailVerificationInput: 'input#proof-confirmation-email-input',
+        emailVerificationUsePassword: '[data-testid="viewFooter"] + [data-testid="viewFooter"] [role="button"]',
         passwordIcon: '[data-testid="tile"]:has(svg path[d*="M11.78 10.22a.75.75"])',
         accountLocked: '#serviceAbuseLandingTitle',
         errorAlert: 'div[role="alert"]',
@@ -175,9 +180,10 @@ export class Login {
         await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})
 
         const url = new URL(page.url())
-        this.bot.logger.debug(this.bot.isMobile, 'DETECT-STATE', `Current URL: ${url.hostname}${url.pathname}`)
+        const hostname = url.hostname.toLowerCase()
+        this.bot.logger.debug(this.bot.isMobile, 'DETECT-STATE', `Current URL: ${hostname}${url.pathname}`)
 
-        if (url.hostname === 'chromewebdata') {
+        if (hostname === 'chromewebdata') {
             this.bot.logger.warn(this.bot.isMobile, 'DETECT-STATE', 'Detected chromewebdata error page')
             return 'CHROMEWEBDATA_ERROR'
         }
@@ -188,8 +194,8 @@ export class Login {
             return 'ACCOUNT_LOCKED'
         }
 
-        if (url.hostname === 'rewards.bing.com' || url.hostname === 'account.microsoft.com') {
-            this.bot.logger.debug(this.bot.isMobile, 'DETECT-STATE', 'On rewards/account page, assuming logged in')
+        if (hostname === 'bing.com' || hostname.endsWith('.bing.com') || hostname === 'account.microsoft.com') {
+            this.bot.logger.debug(this.bot.isMobile, 'DETECT-STATE', 'On Bing/rewards/account page, assuming logged in')
             return 'LOGGED_IN'
         }
 
@@ -198,6 +204,7 @@ export class Login {
             [this.selectors.passwordEntry, 'PASSWORD_INPUT'],
             [this.selectors.emailEntry, 'EMAIL_INPUT'],
             [this.selectors.recoveryEmail, 'RECOVERY_EMAIL_INPUT'],
+            [this.selectors.emailVerificationInput, 'EMAIL_VERIFICATION_INPUT'],
             [this.selectors.kmsiVideo, 'KMSI_PROMPT'],
             [this.selectors.passKeyVideo, 'PASSKEY_VIDEO'],
             [this.selectors.passKeyError, 'PASSKEY_ERROR'],
@@ -230,15 +237,37 @@ export class Login {
             results.push('SIGN_IN_ANOTHER_WAY_PASSWORDLESS')
         }
 
-        const [identityBanner, primaryButton, passwordEntry] = await Promise.all([
+        const [identityBanner, primaryButton, passwordEntry, usePasswordOption] = await Promise.all([
             this.checkSelector(page, this.selectors.identityBanner),
             this.checkSelector(page, this.selectors.primaryButton),
-            this.checkSelector(page, this.selectors.passwordEntry)
+            this.checkSelector(page, this.selectors.passwordEntry),
+            this.checkSelector(page, this.selectors.usePasswordOption)
         ])
 
-        if (identityBanner && primaryButton && !passwordEntry && !results.includes('2FA_TOTP')) {
-            this.bot.logger.debug(this.bot.isMobile, 'DETECT-STATE', 'Primary sign-in action detected')
-            results.push('PRIMARY_SIGN_IN')
+        if (
+            identityBanner &&
+            primaryButton &&
+            usePasswordOption &&
+            !passwordEntry &&
+            !results.includes('2FA_TOTP') &&
+            !results.includes('RECOVERY_EMAIL_INPUT') &&
+            !results.includes('EMAIL_VERIFICATION_INPUT')
+        ) {
+            this.bot.logger.debug(this.bot.isMobile, 'DETECT-STATE', 'Password sign-in fallback action detected')
+            results.push('USE_PASSWORD')
+        }
+
+        if (
+            identityBanner &&
+            primaryButton &&
+            !usePasswordOption &&
+            !passwordEntry &&
+            !results.includes('2FA_TOTP') &&
+            !results.includes('RECOVERY_EMAIL_INPUT') &&
+            !results.includes('EMAIL_VERIFICATION_INPUT')
+        ) {
+            this.bot.logger.debug(this.bot.isMobile, 'DETECT-STATE', 'Passwordless "Send Code" action detected')
+            results.push('PASSWORDLESS_SEND_CODE')
         }
 
         let foundStates = results.filter((s): s is LoginState => s !== null)
@@ -249,11 +278,11 @@ export class Login {
         }
 
         if (foundStates.includes('ERROR_ALERT')) {
-            const errorIsReal = url.hostname === 'login.live.com' && !foundStates.includes('2FA_TOTP')
+            const errorIsReal = hostname === 'login.live.com' && !foundStates.includes('2FA_TOTP')
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'DETECT-STATE',
-                `ERROR_ALERT found - hostname: ${url.hostname}, has 2FA: ${foundStates.includes('2FA_TOTP')}, treating as real: ${errorIsReal}`
+                `ERROR_ALERT found - hostname: ${hostname}, has 2FA: ${foundStates.includes('2FA_TOTP')}, treating as real: ${errorIsReal}`
             )
             if (errorIsReal) return 'ERROR_ALERT'
             foundStates = foundStates.filter(s => s !== 'ERROR_ALERT')
@@ -267,12 +296,14 @@ export class Login {
             'LOGIN_PASSWORDLESS',
             'PASSWORD_INPUT',
             'EMAIL_INPUT',
+            'EMAIL_VERIFICATION_INPUT',
             'RECOVERY_EMAIL_INPUT',
             'SIGN_IN_ANOTHER_WAY_PASSWORDLESS',
             'SIGN_IN_ANOTHER_WAY', // Prefer password option over email code
             'SIGN_IN_ANOTHER_WAY_EMAIL',
             'OTP_CODE_ENTRY',
-            'PRIMARY_SIGN_IN',
+            'USE_PASSWORD',
+            'PASSWORDLESS_SEND_CODE',
             '2FA_TOTP'
         ]
 
@@ -442,9 +473,18 @@ export class Login {
                 return true
             }
 
-            case 'PRIMARY_SIGN_IN': {
-                // Microsoft's preferred sign-in action is the primary button. For RemoteNGC/passwordless
-                // accounts this sends the Authenticator request; the resulting challenge has stable test IDs.
+            case 'USE_PASSWORD': {
+                this.bot.logger.info(this.bot.isMobile, 'LOGIN', 'Password sign-in option available, selecting it')
+                const clicked = await this.bot.browser.utils.ghostClick(page, this.selectors.usePasswordOption)
+                if (!clicked) {
+                    this.bot.logger.warn(this.bot.isMobile, 'LOGIN', 'Could not select password sign-in option')
+                    return false
+                }
+                await this.waitForIdle(page, 'after selecting password sign-in')
+                return true
+            }
+
+            case 'PASSWORDLESS_SEND_CODE': {
                 this.bot.logger.info(this.bot.isMobile, 'LOGIN', 'Continuing with primary sign-in method')
                 const clicked = await this.bot.browser.utils.ghostClick(page, this.selectors.primaryButton)
                 if (!clicked) {
@@ -590,6 +630,28 @@ export class Login {
                 return true
             }
 
+            case 'EMAIL_VERIFICATION_INPUT': {
+                this.bot.logger.info(
+                    this.bot.isMobile,
+                    'LOGIN',
+                    'Email verification input detected; selecting password sign-in'
+                )
+                await this.waitForIdle(page, 'on email verification page')
+
+                const clicked = await this.bot.browser.utils.ghostClick(
+                    page,
+                    this.selectors.emailVerificationUsePassword
+                )
+                if (!clicked) {
+                    this.bot.logger.warn(this.bot.isMobile, 'LOGIN', 'Could not select password sign-in option')
+                    return false
+                }
+
+                await this.waitForIdle(page, 'after selecting password sign-in')
+                this.bot.logger.info(this.bot.isMobile, 'LOGIN', 'Password sign-in option selected')
+                return true
+            }
+
             case 'CHROMEWEBDATA_ERROR': {
                 this.bot.logger.warn(this.bot.isMobile, 'LOGIN', 'chromewebdata error detected, attempting recovery')
                 try {
@@ -676,9 +738,6 @@ export class Login {
                     'OTP code entry page detected; returning to sign-in method selection'
                 )
 
-                // Footer links are localized and their meaning changes between Microsoft login views.
-                // The back button has a stable id and safely returns us to method selection, where the
-                // structural priority logic can prefer Authenticator/password over an email code.
                 if (!(await this.tryClick(page, this.selectors.backButton, 'Back button'))) {
                     this.bot.logger.warn(this.bot.isMobile, 'LOGIN', 'Back button not found on OTP page')
                     return false
@@ -716,9 +775,19 @@ export class Login {
 
         await page.goto(REWARDS_BASE_URL, { waitUntil: 'networkidle', timeout: 10000 }).catch(() => {})
 
-        const loginRewardsSuccess = new URL(page.url()).hostname === 'rewards.bing.com'
+        const rewardsLanding = new URL(page.url())
+        const rewardsHostname = rewardsLanding.hostname.toLowerCase()
+        const loginRewardsSuccess = rewardsHostname === 'bing.com' || rewardsHostname.endsWith('.bing.com')
         if (loginRewardsSuccess) {
-            this.bot.logger.info(this.bot.isMobile, 'LOGIN', 'Logged into Microsoft Rewards successfully')
+            if (rewardsHostname === 'rewards.bing.com') {
+                this.bot.logger.info(this.bot.isMobile, 'LOGIN', 'Logged into Microsoft Rewards successfully')
+            } else {
+                this.bot.logger.info(
+                    this.bot.isMobile,
+                    'LOGIN',
+                    `Rewards sign-in redirected to Bing home (${rewardsHostname}); continuing verification`
+                )
+            }
         } else {
             this.bot.logger.warn(this.bot.isMobile, 'LOGIN', 'Could not verify Rewards Dashboard, assuming login valid')
         }
@@ -759,8 +828,10 @@ export class Login {
                 this.bot.logger.debug(this.bot.isMobile, 'LOGIN-BING', `Verification loop ${i + 1}/${loopMax}`)
 
                 const u = new URL(page.url())
-                const atBingHome = u.hostname === 'www.bing.com' && u.pathname === '/'
-                if (!atBingHome) {
+                const hostname = u.hostname.toLowerCase()
+                const atBingPage =
+                    (hostname === 'bing.com' || hostname.endsWith('.bing.com')) && hostname !== 'rewards.bing.com'
+                if (!atBingPage) {
                     const state = await this.detectCurrentState(page)
                     if (state === 'PASSKEY_ERROR') {
                         this.bot.logger.info(this.bot.isMobile, 'LOGIN-BING', 'Dismissing Passkey error state')
@@ -774,10 +845,10 @@ export class Login {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     'LOGIN-BING',
-                    `At Bing home: ${atBingHome} (${u.hostname}${u.pathname})`
+                    `At Bing page: ${atBingPage} (${hostname}${u.pathname})`
                 )
 
-                if (atBingHome) {
+                if (atBingPage) {
                     await this.bot.browser.utils.tryDismissAllMessages(page).catch(() => {})
 
                     const signedIn = await page
