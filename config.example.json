@@ -100,10 +100,11 @@
         "pushplus": {
             "enabled": false,
             "token": "",
-            "title": "Microsoft-Rewards-Script",
+            "title": "Microsoft-Bing-Rewards",
             "template": "txt",
             "channel": "",
-            "webhook": ""
+            "webhook": "",
+            "dailySummary": true
         },
         "webhookLogFilter": {
             "enabled": false,

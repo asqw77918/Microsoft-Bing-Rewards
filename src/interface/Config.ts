@@ -121,4 +121,5 @@ export interface WebhookPushPlusConfig {
     template?: string // 'txt' | 'html' | 'json' | 'markdown'
     channel?: string // e.g. 'wechat', 'email', 'webhook'
     webhook?: string // custom webhook URL for channel=webhook
+    dailySummary?: boolean // 每日总结模式：收集本次运行日志，结束时汇总为一条推送（默认 true，取代逐条推送）
 }

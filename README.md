@@ -1,8 +1,8 @@
 # Microsoft-Rewards-Script（中文 Fork 版）
 
 [![Discord](https://img.shields.io/badge/Join%20Our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8BxYbV4pkj)
-[![Latest Build](https://img.shields.io/github/actions/workflow/status/asqw77918/Microsoft-Rewards-Script/auto-release.yml?branch=v4&style=for-the-badge&label=Latest%20Build)](https://github.com/asqw77918/Microsoft-Rewards-Script/actions/workflows/auto-release.yml)
-[![Docker](https://img.shields.io/badge/Docker-GHCR-blue?style=for-the-badge&logo=docker)](https://github.com/asqw77918/Microsoft-Rewards-Script/pkgs/container/microsoft-rewards-script)
+[![Latest Build](https://img.shields.io/github/actions/workflow/status/asqw77918/Microsoft-Bing-Rewards/auto-release.yml?branch=v4&style=for-the-badge&label=Latest%20Build)](https://github.com/asqw77918/Microsoft-Bing-Rewards/actions/workflows/auto-release.yml)
+[![Docker](https://img.shields.io/badge/Docker-GHCR-blue?style=for-the-badge&logo=docker)](https://github.com/asqw77918/Microsoft-Bing-Rewards/pkgs/container/microsoft-bing-rewards)
 
 > [!TIP]
 > 本版本仅支持**新版 Bing Rewards 仪表盘**，**不支持**旧版仪表盘。
@@ -116,7 +116,7 @@ docker compose up -d
 #### 获取脚本
 
 ```bash
-git clone https://github.com/asqw77918/Microsoft-Rewards-Script.git
+git clone https://github.com/asqw77918/Microsoft-Bing-Rewards.git
 cd Microsoft-Rewards-Script
 ```
 
@@ -193,7 +193,7 @@ ACCOUNT_1_PASSWORD=your_password
 ```yaml
 services:
     microsoft-rewards-script:
-        image: ghcr.io/asqw77918/microsoft-rewards-script:4
+        image: ghcr.io/asqw77918/microsoft-bing-rewards:4
         container_name: microsoft-rewards-script
         restart: unless-stopped
         volumes:
@@ -259,11 +259,19 @@ environment:
     # ── PushPlus 推送（本 Fork 新增）──────────────────
     CONFIG_PUSHPLUS_ENABLED: 'true'
     CONFIG_PUSHPLUS_TOKEN: '你的pushplus_token'
-    CONFIG_PUSHPLUS_TITLE: 'Microsoft-Rewards-Script'
+    CONFIG_PUSHPLUS_TITLE: 'Microsoft-Bing-Rewards'
     CONFIG_PUSHPLUS_TEMPLATE: 'txt'
     # CONFIG_PUSHPLUS_CHANNEL: ''
     # CONFIG_PUSHPLUS_WEBHOOK: ''
+    # 每日总结模式：默认 true，收集本次运行日志，结束时汇总为一条总结汇报推送；
+    # 设为 false 则恢复逐条实时推送
+    CONFIG_PUSHPLUS_DAILYSUMMARY: 'true'
 ```
+
+> [!TIP]
+> **每日总结模式（默认开启）**：开启后脚本不再逐条推送日志，而是在每次运行结束时，
+> 把本次运行的错误 / 警告 / 信息日志汇总成一条"运行总结汇报"发送，避免消息刷屏。
+> 适合每天定时运行（如 Docker 内置 cron 每天跑一次）的使用场景。
 
 ---
 

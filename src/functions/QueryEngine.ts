@@ -118,7 +118,7 @@ export class QueryCore {
             const rawTopics = topicLists.flat()
             const topics = this.normalizeAndDedupe(rawTopics)
             if (!topics.length) {
-                this.bot.logger.warn(this.bot.isMobile, 'QUERY-MANAGER', 'No topics returned by any source')
+                this.bot.logger.warn(this.bot.isMobile, 'QUERY-MANAGER', '所有来源均未返回搜索主题')
                 return []
             }
 
@@ -141,7 +141,7 @@ export class QueryCore {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'QUERY-MANAGER',
-                `Failed building main topic pool | ${error instanceof Error ? error.message : String(error)}`
+                `构建主搜索主题池失败 | ${error instanceof Error ? error.message : String(error)}`
             )
             return []
         }
@@ -474,7 +474,7 @@ export class QueryCore {
 
             const feeds = RSS_FEEDS[site]
             if (!feeds) {
-                this.bot.logger.warn(this.bot.isMobile, 'SEARCH-RSS', `Unknown RSS site "${site}" in "${selector}"`)
+                this.bot.logger.warn(this.bot.isMobile, 'SEARCH-RSS', `未知的 RSS 站点 "${site}"（位于 "${selector}"）`)
                 continue
             }
 
@@ -485,7 +485,7 @@ export class QueryCore {
 
             const url = feeds[endpoint]
             if (url) urls.add(url)
-            else this.bot.logger.warn(this.bot.isMobile, 'SEARCH-RSS', `Unknown RSS feed "${site}.${endpoint}"`)
+            else this.bot.logger.warn(this.bot.isMobile, 'SEARCH-RSS', `未知的 RSS 订阅源 "${site}.${endpoint}"`)
         }
 
         return [...urls]

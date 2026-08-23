@@ -28,7 +28,7 @@ import HttpClient from './util/Http'
 import { sendDiscord, flushDiscordQueue } from './logging/Discord'
 import { sendNtfy, flushNtfyQueue } from './logging/Ntfy'
 import { sendTelegram, flushTelegramQueue } from './logging/Telegram'
-import { sendPushPlus, flushPushPlusQueue } from './logging/PushPlus'
+import { sendPushPlus, collectPushPlusLog, sendPushPlusSummary, flushPushPlusQueue } from './logging/PushPlus'
 import type { DashboardData } from './interface/DashboardData'
 import type { AppDashboardData } from './interface/AppDashBoardData'
 import type { AppEarnablePoints } from './interface/Points'
@@ -321,7 +321,11 @@ export class MicrosoftRewardsBot {
                         sendTelegram(webhook.telegram, content, level)
                     }
                     if (webhook.pushplus?.enabled && webhook.pushplus.token) {
-                        sendPushPlus(webhook.pushplus, content, level)
+                        if (webhook.pushplus.dailySummary ?? true) {
+                            collectPushPlusLog(level, content)
+                        } else {
+                            sendPushPlus(webhook.pushplus, content, level)
+                        }
                     }
                 }
             })
@@ -360,6 +364,9 @@ export class MicrosoftRewardsBot {
                     `所有账号处理完成 | 已处理账号数=${allAccountStats.length} | 获得积分=${totalCollectedPoints} | 之前余额=${totalInitialPoints} | 当前余额=${totalFinalPoints} | 运行时间(分钟)=${totalDurationMinutes}`,
                     'green'
                 )
+
+                // pushplus 每日总结模式：发送本次运行汇总
+                await sendPushPlusSummary(this.config.webhook.pushplus)
 
                 await flushAllWebhooks()
 
@@ -514,9 +521,12 @@ export class MicrosoftRewardsBot {
             this.logger.info(
                 'main',
                 'RUN-END',
-                `Completed all accounts | accountsProcessed=${accountStats.length} | pointsGained=${totalCollectedPoints} | previousBalance=${totalInitialPoints} | currentBalance=${totalFinalPoints} | runtimeMinutes=${totalDurationMinutes}`,
+                `所有账号处理完成 | 已处理账号数=${accountStats.length} | 获得积分=${totalCollectedPoints} | 之前余额=${totalInitialPoints} | 当前余额=${totalFinalPoints} | 运行时间(分钟)=${totalDurationMinutes}`,
                 'green'
             )
+
+            // pushplus 每日总结模式：发送本次运行汇总
+            await sendPushPlusSummary(this.config.webhook.pushplus)
 
             await flushAllWebhooks()
             process.exit(0)
@@ -538,7 +548,7 @@ export class MicrosoftRewardsBot {
         this.logger.info(
             'main',
             'ACCOUNT-DELAY',
-            `Waiting ${(delayMs / 1000).toFixed(1)} seconds before starting the next account${
+            `等待 ${(delayMs / 1000).toFixed(1)} 秒后开始处理下一个账号${
                 nextEmail ? ` (${nextEmail})` : ''
             }`
         )
@@ -550,7 +560,7 @@ export class MicrosoftRewardsBot {
         this.mainDesktopPage = await session.context.newPage()
         this.fingerprintDesktop = session.fingerprint
 
-        this.logger.info(this.isMobile, 'BROWSER', `Desktop Browser started | ${account.email}`)
+        this.logger.info(this.isMobile, 'BROWSER', `桌面端浏览器已启动 | ${account.email}`)
 
         await this.login.login(this.mainDesktopPage, account)
         await this.browser.func.checkpointActiveSession('LOGIN-CHECKPOINT')
@@ -561,7 +571,7 @@ export class MicrosoftRewardsBot {
 
     async Main(account: Account): Promise<{ initialPoints: number; collectedPoints: number }> {
         const accountEmail = account.email
-        this.logger.info('main', 'FLOW', `Starting session for ${accountEmail}`)
+        this.logger.info('main', 'FLOW', `开始处理账号会话: ${accountEmail}`)
 
         // Drop cookies, page snapshots and app credentials from the previous account
         this.accessToken = ''

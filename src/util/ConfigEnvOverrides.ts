@@ -111,6 +111,7 @@ export const ENV_OVERRIDES: EnvOverrideEntry[] = [
     { env: 'CONFIG_PUSHPLUS_TEMPLATE', path: 'webhook.pushplus.template', type: 'string' },
     { env: 'CONFIG_PUSHPLUS_CHANNEL', path: 'webhook.pushplus.channel', type: 'string' },
     { env: 'CONFIG_PUSHPLUS_WEBHOOK', path: 'webhook.pushplus.webhook', type: 'string' },
+    { env: 'CONFIG_PUSHPLUS_DAILYSUMMARY', path: 'webhook.pushplus.dailySummary', type: 'bool' },
 
     // Webhook log filter
     { env: 'CONFIG_WEBHOOK_LOG_FILTER_ENABLED', path: 'webhook.webhookLogFilter.enabled', type: 'bool' },

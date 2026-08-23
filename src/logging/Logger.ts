@@ -3,7 +3,7 @@ import cluster from 'cluster'
 import { sendDiscord } from './Discord'
 import { sendNtfy } from './Ntfy'
 import { sendTelegram } from './Telegram'
-import { sendPushPlus } from './PushPlus'
+import { sendPushPlus, collectPushPlusLog } from './PushPlus'
 import type { MicrosoftRewardsBot } from '../index'
 import { errorDiagnostic } from '../util/ErrorDiagnostic'
 import type { LogFilter } from '../interface/Config'
@@ -155,7 +155,12 @@ export class Logger {
 
             if (config.webhook.pushplus?.enabled && config.webhook.pushplus.token) {
                 if (level === 'debug') return
-                sendPushPlus(config.webhook.pushplus, cleanMsg, level)
+                if (config.webhook.pushplus.dailySummary ?? true) {
+                    // 每日总结模式：先收集日志，运行结束时汇总为一条推送
+                    collectPushPlusLog(level, cleanMsg)
+                } else {
+                    sendPushPlus(config.webhook.pushplus, cleanMsg, level)
+                }
             }
         } else {
             process.send?.({ __ipcLog: { content: cleanMsg, level } })
