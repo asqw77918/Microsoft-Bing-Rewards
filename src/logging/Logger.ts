@@ -136,7 +136,6 @@ export class Logger {
             }
 
             if (config.webhook.pushplus?.enabled && config.webhook.pushplus.token) {
-                if (level === 'debug') return
                 if (config.webhook.pushplus.dailySummary ?? true) {
                     // 每日总结模式：先收集日志，运行结束时汇总为一条推送
                     collectPushPlusLog(level, cleanMsg)
