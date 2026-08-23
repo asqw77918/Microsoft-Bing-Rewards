@@ -92,7 +92,7 @@ export default class ReactFunc {
         this.bot.logger.info(
             this.bot.isMobile,
             'REACT-PARSE',
-            `Snapshot complete | offers=${offers.length} | reportable=${offers.filter(o => o.reportable).length} | streaks=${streaks.length} | streakProtectionEnabled=${streakProtection?.isProtectionOn ?? 'null'} | streakProtectionRemainingDays=${streakProtection?.remainingDays ?? 'null'} | streakCounter=${streakProtection?.streakCounter ?? 'null'} | level=${account.level} | account=${accountEmail ?? 'null'}`
+            `快照完成 | offers=${offers.length} | reportable=${offers.filter(o => o.reportable).length} | streaks=${streaks.length} | streakProtectionEnabled=${streakProtection?.isProtectionOn ?? 'null'} | streakProtectionRemainingDays=${streakProtection?.remainingDays ?? 'null'} | streakCounter=${streakProtection?.streakCounter ?? 'null'} | level=${account.level} | account=${accountEmail ?? 'null'}`
         )
 
         return {
@@ -151,7 +151,7 @@ export default class ReactFunc {
                         this.bot.logger.debug(
                             this.bot.isMobile,
                             'REACT-PARSE',
-                            `Skipped undecodable flight chunk | error=${err instanceof Error ? err.message : String(err)}`
+                            `跳过了无法解码的 flight chunk | error=${err instanceof Error ? err.message : String(err)}`
                         )
                     }
                 }
@@ -163,14 +163,14 @@ export default class ReactFunc {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Concatenated flight chunks | pages=${pages.length} | chunks=${count} | length=${combined.length} | perSource=[${perPage.join(', ')}]`
+                `已拼接 flight chunks | pages=${pages.length} | chunks=${count} | length=${combined.length} | perSource=[${perPage.join(', ')}]`
             )
 
             if (count === 0) {
                 this.bot.logger.warn(
                     this.bot.isMobile,
                     'REACT-PARSE',
-                    'No __next_f flight chunks found - page may not be an RSC render or markup changed'
+                    '未找到 __next_f flight chunks - 页面可能不是 RSC 渲染或标记已更改'
                 )
             }
 
@@ -179,7 +179,7 @@ export default class ReactFunc {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Failed concatenating flight chunks | error=${error instanceof Error ? error.message : String(error)}`
+                `拼接 flight chunks 失败 | error=${error instanceof Error ? error.message : String(error)}`
             )
             return ''
         }
@@ -255,7 +255,7 @@ export default class ReactFunc {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `extractObjects("${anchor}") had ${failures} unparseable matches`
+                `extractObjects("${anchor}") 有 ${failures} 个无法解析的匹配项`
             )
         }
 
@@ -339,12 +339,12 @@ export default class ReactFunc {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Parsed offers | total=${unique.length} | reportable=${unique.filter(o => o.reportable).length}`
+                `已解析优惠 | total=${unique.length} | reportable=${unique.filter(o => o.reportable).length}`
             )
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Parsed offer ids | ${unique.map(o => `${o.offerId}${o.reportable ? '' : '(skip)'}`).join(', ') || 'none'}`
+                `已解析优惠 id | ${unique.map(o => `${o.offerId}${o.reportable ? '' : '(skip)'}`).join(', ') || 'none'}`
             )
 
             return unique
@@ -352,7 +352,7 @@ export default class ReactFunc {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Failed parsing offers | error=${error instanceof Error ? error.message : String(error)}`
+                `解析优惠失败 | error=${error instanceof Error ? error.message : String(error)}`
             )
             return []
         }
@@ -397,7 +397,7 @@ export default class ReactFunc {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Parsed streaks | ${unique.map(s => `${s.partner}:${s.completedDays}/${s.totalDays}`).join(', ') || 'none'}`
+                `已解析连续签到 | ${unique.map(s => `${s.partner}:${s.completedDays}/${s.totalDays}`).join(', ') || 'none'}`
             )
 
             return unique
@@ -405,7 +405,7 @@ export default class ReactFunc {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Failed parsing streaks | error=${error instanceof Error ? error.message : String(error)}`
+                `解析连续签到失败 | error=${error instanceof Error ? error.message : String(error)}`
             )
             return []
         }
@@ -430,7 +430,7 @@ export default class ReactFunc {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Parsed streak protection | enabled=${state.isProtectionOn} | remainingDays=${state.remainingDays ?? 'null'} | streakCounter=${state.streakCounter}`
+                `已解析连续签到保护 | enabled=${state.isProtectionOn} | remainingDays=${state.remainingDays ?? 'null'} | streakCounter=${state.streakCounter}`
             )
 
             return state
@@ -438,7 +438,7 @@ export default class ReactFunc {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Failed parsing streak protection | error=${error instanceof Error ? error.message : String(error)}`
+                `解析连续签到保护失败 | error=${error instanceof Error ? error.message : String(error)}`
             )
             return null
         }
@@ -473,7 +473,7 @@ export default class ReactFunc {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Parsed account | level=${account.level} | available=${account.availablePoints} | toGo=${account.pointsRemaining} | lifetime=${account.lifetimeEarn}`
+                `已解析账户 | level=${account.level} | available=${account.availablePoints} | toGo=${account.pointsRemaining} | lifetime=${account.lifetimeEarn}`
             )
 
             if (account.level === null && account.availablePoints === null) {
@@ -481,7 +481,7 @@ export default class ReactFunc {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     'REACT-PARSE',
-                    'Account state empty - membership/header objects not found in payload'
+                    '账户状态为空 - 在 payload 中未找到 membership/header 对象'
                 )
             }
 
@@ -490,7 +490,7 @@ export default class ReactFunc {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Failed parsing account | error=${error instanceof Error ? error.message : String(error)}`
+                `解析账户失败 | error=${error instanceof Error ? error.message : String(error)}`
             )
             return empty
         }
@@ -626,13 +626,13 @@ export default class ReactFunc {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Extracted action ids | named=${Object.keys(byName).length} | total=${all.size}`
+                `已提取 action ids | named=${Object.keys(byName).length} | total=${all.size}`
             )
         } catch (error) {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Failed extracting action ids | error=${error instanceof Error ? error.message : String(error)}`
+                `提取 action ids 失败 | error=${error instanceof Error ? error.message : String(error)}`
             )
         }
 
@@ -648,7 +648,7 @@ export default class ReactFunc {
             this.bot.logger.info(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Quest snapshot | children=${children.length} | reportable=${children.filter(c => c.reportable).length}`
+                `Quest 快照 | children=${children.length} | reportable=${children.filter(c => c.reportable).length}`
             )
 
             return children
@@ -656,7 +656,7 @@ export default class ReactFunc {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Failed parsing quest page | error=${error instanceof Error ? error.message : String(error)}`
+                `解析 Quest 页面失败 | error=${error instanceof Error ? error.message : String(error)}`
             )
             return []
         }
@@ -693,7 +693,7 @@ export default class ReactFunc {
         this.bot.logger.debug(
             this.bot.isMobile,
             'REACT-PARSE',
-            `Parsed quest children | total=${out.length} | reportable=${out.filter(c => c.reportable).length}`
+            `已解析 Quest 子项 | total=${out.length} | reportable=${out.filter(c => c.reportable).length}`
         )
 
         return out
@@ -747,18 +747,18 @@ export default class ReactFunc {
             this.bot.logger.info(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Quest list | parents=${out.length} | incomplete=${out.filter(q => !q.complete).length}`
+                `Quest 列表 | parents=${out.length} | incomplete=${out.filter(q => !q.complete).length}`
             )
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Quest points | ${out.map(q => `${q.title || q.offerId}=${q.pointProgressMax}`).join(' | ') || 'none'}`
+                `Quest 点数 | ${out.map(q => `${q.title || q.offerId}=${q.pointProgressMax}`).join(' | ') || 'none'}`
             )
             if (!out.length) {
                 this.bot.logger.warn(
                     this.bot.isMobile,
                     'REACT-PARSE',
-                    'No parent quests parsed - the fetched HTML may be missing the QuestSection chunks (Suspense/streaming or a login redirect)'
+                    '未解析到任何父级 Quest - 获取的 HTML 可能缺少 QuestSection chunks（Suspense/流式渲染或登录重定向）'
                 )
             }
             return out
@@ -766,7 +766,7 @@ export default class ReactFunc {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'REACT-PARSE',
-                `Failed parsing quest list | error=${error instanceof Error ? error.message : String(error)}`
+                `解析 Quest 列表失败 | error=${error instanceof Error ? error.message : String(error)}`
             )
             return []
         }

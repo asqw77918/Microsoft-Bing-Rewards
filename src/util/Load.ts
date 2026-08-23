@@ -129,14 +129,7 @@ export function loadAccounts(): Account[] {
             const email = envStr(`ACCOUNT_${index}_EMAIL`)
             if (!email) continue
 
-<<<<<<< HEAD
-            const password = envStr(`ACCOUNT_${index}_PASSWORD`)
-            if (!password) {
-                throw new Error(`已设置 ACCOUNT_${index}_EMAIL 但缺少 ACCOUNT_${index}_PASSWORD`)
-            }
-=======
             const password = envStr(`ACCOUNT_${index}_PASSWORD`) ?? ''
->>>>>>> upstream/v4
 
             accounts.push({
                 email,
@@ -151,13 +144,9 @@ export function loadAccounts(): Account[] {
         }
 
         if (!accounts.length) {
-<<<<<<< HEAD
             throw new Error(
-                '环境中未找到账号。请至少设置一对 ACCOUNT_N_EMAIL / ACCOUNT_N_PASSWORD（参见 env.example）。'
+                '环境中未找到账号。请至少设置一个 ACCOUNT_N_EMAIL（参见 env.example）。'
             )
-=======
-            throw new Error('No accounts found in environment. Set at least one ACCOUNT_N_EMAIL (see env.example).')
->>>>>>> upstream/v4
         }
 
         return validateAccounts(accounts)

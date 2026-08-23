@@ -481,18 +481,10 @@ export class MicrosoftRewardsBot {
                             error: 'Microsoft bot-score warning detected'
                         })
 
-<<<<<<< HEAD
-                    this.logger.info(
-                        'main',
-                        'ACCOUNT-END',
-                        `账号处理完成: ${accountEmail} | 获得积分=${collectedPoints} | 之前余额=${accountInitialPoints} | 当前余额=${accountFinalPoints} | 耗时(秒)=${durationSeconds}`,
-                        'green'
-                    )
-=======
                         this.logger.warn(
                             'main',
                             'ACCOUNT-SKIP',
-                            `Skipped account: ${accountEmail} | reason=Fraud_UserWarning_BotScore_UX | durationSeconds=${durationSeconds}`
+                            `已跳过账号: ${accountEmail} | 原因=Fraud_UserWarning_BotScore_UX | 耗时(秒)=${durationSeconds}`
                         )
                     } else {
                         accountStats.push({
@@ -507,11 +499,10 @@ export class MicrosoftRewardsBot {
                         this.logger.info(
                             'main',
                             'ACCOUNT-END',
-                            `Completed account: ${accountEmail} | pointsGained=${collectedPoints} | previousBalance=${accountInitialPoints} | currentBalance=${accountFinalPoints} | durationSeconds=${durationSeconds}`,
+                            `账号处理完成: ${accountEmail} | 获得积分=${collectedPoints} | 之前余额=${accountInitialPoints} | 当前余额=${accountFinalPoints} | 耗时(秒)=${durationSeconds}`,
                             'green'
                         )
                     }
->>>>>>> upstream/v4
                 } else {
                     accountStats.push({
                         email: accountEmail,
@@ -659,17 +650,6 @@ export class MicrosoftRewardsBot {
 
                 await this.login.login(this.mainMobilePage, account)
 
-<<<<<<< HEAD
-                try {
-                    this.accessToken = await this.login.getAppAccessToken(this.mainMobilePage, accountEmail)
-                } catch (error) {
-                    this.logger.error(
-                        'main',
-                        'FLOW',
-                        `获取移动端访问令牌失败: ${error instanceof Error ? error.message : String(error)}`
-                    )
-                    this.accessToken = ''
-=======
                 if (needsAppAccessToken) {
                     try {
                         this.accessToken = await this.login.getAppAccessToken(this.mainMobilePage, accountEmail)
@@ -677,11 +657,10 @@ export class MicrosoftRewardsBot {
                         this.logger.error(
                             'main',
                             'FLOW',
-                            `Failed to get mobile access token: ${error instanceof Error ? error.message : String(error)}`
+                            `获取移动端访问令牌失败: ${error instanceof Error ? error.message : String(error)}`
                         )
                         this.accessToken = ''
                     }
->>>>>>> upstream/v4
                 }
 
                 await this.browser.func.checkpointActiveSession('LOGIN-CHECKPOINT')

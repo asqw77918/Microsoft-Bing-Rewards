@@ -52,7 +52,7 @@ export class ActivateSearchPerk extends BaseActivity {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'ACTIVATE-SEARCH-PERK',
-                'No search-multiplier perk present on the dashboard'
+                '仪表盘上不存在搜索倍数特权'
             )
             return
         }
@@ -62,7 +62,7 @@ export class ActivateSearchPerk extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 'ACTIVATE-SEARCH-PERK',
-                `${perk.multiplier}x search perk present in dashboard but missing from the page snapshot - cannot activate | offerId=${perk.offerId}`
+                `${perk.multiplier}x 搜索倍数特权存在于仪表盘但页面快照中缺失 - 无法激活 | offerId=${perk.offerId}`
             )
             return
         }
@@ -71,7 +71,7 @@ export class ActivateSearchPerk extends BaseActivity {
             this.bot.logger.info(
                 this.bot.isMobile,
                 'ACTIVATE-SEARCH-PERK',
-                `${perk.multiplier}x search perk already active (or not activatable) | offerId=${perk.offerId}`,
+                `${perk.multiplier}x 搜索特权已激活（或不可激活）| offerId=${perk.offerId}`,
                 'green'
             )
             return
@@ -82,7 +82,7 @@ export class ActivateSearchPerk extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 'ACTIVATE-SEARCH-PERK',
-                'Skipping: "reportActivity" action id not discovered in bundle'
+                '跳过：未在 bundle 中发现 "reportActivity" 操作 id'
             )
             return
         }
@@ -92,7 +92,7 @@ export class ActivateSearchPerk extends BaseActivity {
         this.bot.logger.info(
             this.bot.isMobile,
             'ACTIVATE-SEARCH-PERK',
-            `Activating ${perk.multiplier}x search perk | offerId=${perk.offerId} | geo=${this.bot.userData.geoLocale}`
+            `正在激活 ${perk.multiplier}x 搜索倍数特权 | offerId=${perk.offerId} | geo=${this.bot.userData.geoLocale}`
         )
 
         try {
@@ -109,21 +109,21 @@ export class ActivateSearchPerk extends BaseActivity {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'ACTIVATE-SEARCH-PERK',
-                `Response | offerId=${perk.offerId} | status=${status} | acknowledged=${acknowledged}`
+                `响应 | offerId=${perk.offerId} | status=${status} | acknowledged=${acknowledged}`
             )
 
             if (acknowledged) {
                 this.bot.logger.info(
                     this.bot.isMobile,
                     'ACTIVATE-SEARCH-PERK',
-                    `Activated ${perk.multiplier}x search perk | offerId=${perk.offerId} | daily search cap is now boosted`,
+                    `已激活 ${perk.multiplier}x 搜索倍数特权 | offerId=${perk.offerId} | 每日搜索上限已提升`,
                     'green'
                 )
             } else {
                 this.bot.logger.warn(
                     this.bot.isMobile,
                     'ACTIVATE-SEARCH-PERK',
-                    `Activation not acknowledged | offerId=${perk.offerId} | status=${status}`
+                    `激活未被服务器确认 | offerId=${perk.offerId} | status=${status}`
                 )
             }
 
@@ -132,7 +132,7 @@ export class ActivateSearchPerk extends BaseActivity {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'ACTIVATE-SEARCH-PERK',
-                `Error activating search perk | offerId=${perk.offerId} | message=${error instanceof Error ? error.message : String(error)}`
+                `激活搜索特权出错 | offerId=${perk.offerId} | message=${error instanceof Error ? error.message : String(error)}`
             )
         }
     }

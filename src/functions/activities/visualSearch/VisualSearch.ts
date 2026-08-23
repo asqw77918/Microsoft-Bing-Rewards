@@ -32,7 +32,7 @@ export class VisualSearch extends BaseActivity {
 
     public async doVisualSearch(data: DashboardData): Promise<number> {
         if (this.bot.isMobile) {
-            this.bot.logger.debug(this.bot.isMobile, 'VISUAL-SEARCH', 'Skipping on mobile - desktop-only activity')
+            this.bot.logger.debug(this.bot.isMobile, 'VISUAL-SEARCH', '在移动端跳过 - 仅限桌面端活动')
             return 0
         }
 
@@ -43,7 +43,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.info(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                `Already completed today | visualSearchStreak=${streak.completedDays}/${streak.totalDays}`,
+                `今天已完成 | visualSearchStreak=${streak.completedDays}/${streak.totalDays}`,
                 'green'
             )
             return 0
@@ -56,7 +56,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.info(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                'Visual search not available for this account, skipping'
+                '此账号无法使用视觉搜索，正在跳过'
             )
             return 0
         }
@@ -82,7 +82,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.info(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                'No visual-search streak in the snapshot - falling back to the activation offer'
+                '快照中没有视觉搜索 streak - 回退到激活活动'
             )
             return
         }
@@ -90,14 +90,14 @@ export class VisualSearch extends BaseActivity {
         this.bot.logger.info(
             this.bot.isMobile,
             'VISUAL-SEARCH',
-            `Streak state | partner="${streak.partner}" | enabled=${streak.isEnabled} | dayCompleted=${streak.isCurrentDayCompleted} | days=${streak.completedDays}/${streak.totalDays} | currentDay=${streak.currentDay} | activities=${streak.activitiesCompleted}/${streak.activitiesTotal}`
+            `Streak 状态 | partner="${streak.partner}" | enabled=${streak.isEnabled} | dayCompleted=${streak.isCurrentDayCompleted} | days=${streak.completedDays}/${streak.totalDays} | currentDay=${streak.currentDay} | activities=${streak.activitiesCompleted}/${streak.activitiesTotal}`
         )
 
         if (!streak.isEnabled) {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                'Streak is present but not enabled - searches will not register until it is switched on'
+                'Streak 存在但未启用 - 在启用之前搜索不会被记录'
             )
         }
     }
@@ -108,7 +108,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                'No visual-search activation metadata present in the streak model or generic offers across the current, desktop, or cached mobile Rewards snapshots'
+                '在 streak 模型或当前、桌面、缓存的移动端 Rewards 快照的通用活动中均未找到视觉搜索激活元数据'
             )
             return 'absent'
         }
@@ -117,7 +117,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.info(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                `Visual search activation offer already completed | offerId=${offer.offerId}`,
+                `视觉搜索激活活动已完成 | offerId=${offer.offerId}`,
                 'green'
             )
             return 'already-active'
@@ -127,7 +127,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                `Activation offer present but missing a hash | offerId=${offer.offerId}`
+                `激活活动存在但缺少 hash | offerId=${offer.offerId}`
             )
             return 'failed'
         }
@@ -136,7 +136,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                `Activation offer is not actionable | offerId=${offer.offerId}`
+                `激活活动不可执行 | offerId=${offer.offerId}`
             )
             return 'failed'
         }
@@ -146,7 +146,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                'Skipping activation: "reportActivity" action id not discovered in bundle'
+                '跳过激活：未在 bundle 中发现 "reportActivity" 操作 id'
             )
             return 'failed'
         }
@@ -157,7 +157,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                `Skipping activation: no valid activity type found | offerId=${offer.offerId}`
+                `跳过激活：未找到有效的活动类型 | offerId=${offer.offerId}`
             )
             return 'failed'
         }
@@ -165,7 +165,7 @@ export class VisualSearch extends BaseActivity {
         this.bot.logger.info(
             this.bot.isMobile,
             'VISUAL-SEARCH',
-            `Activating visual search | offerId=${offer.offerId} | activationSource=${offer.activationSource} | activityType=${metadata.activityType} | activityTypeSource=${metadata.activityTypeSource} | promotional=${metadata.isPromotional} | geo=${this.bot.userData.geoLocale}`
+            `正在激活视觉搜索 | offerId=${offer.offerId} | activationSource=${offer.activationSource} | activityType=${metadata.activityType} | activityTypeSource=${metadata.activityTypeSource} | promotional=${metadata.isPromotional} | geo=${this.bot.userData.geoLocale}`
         )
 
         try {
@@ -186,7 +186,7 @@ export class VisualSearch extends BaseActivity {
                 this.bot.logger.info(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `Activated visual search | offerId=${offer.offerId} | acknowledged=${acknowledged} | confirmed=${confirmed}`,
+                    `视觉搜索已激活 | offerId=${offer.offerId} | acknowledged=${acknowledged} | confirmed=${confirmed}`,
                     'green'
                 )
                 return 'activated'
@@ -195,14 +195,14 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                `Activation not acknowledged | offerId=${offer.offerId} | status=${status}`
+                `激活未确认 | offerId=${offer.offerId} | status=${status}`
             )
             return 'failed'
         } catch (error) {
             this.bot.logger.error(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                `Activation error | offerId=${offer.offerId} | ${error instanceof Error ? error.message : String(error)}`
+                `激活出错 | offerId=${offer.offerId} | ${error instanceof Error ? error.message : String(error)}`
             )
             return 'failed'
         }
@@ -222,7 +222,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                `Could not verify activation state | offerId=${offerId} | ${error instanceof Error ? error.message : String(error)}`
+                `无法验证激活状态 | offerId=${offerId} | ${error instanceof Error ? error.message : String(error)}`
             )
             return false
         }
@@ -235,7 +235,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                'Desktop dashboard fetch failed - falling back to the dashboard from the mobile pass'
+                '获取桌面端 dashboard 失败 - 回退到移动端流程的 dashboard'
             )
             return fallback
         }
@@ -344,13 +344,13 @@ export class VisualSearch extends BaseActivity {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `Activation metadata missing from the current snapshot; using cached ${source} streak snapshot | offerId=${streak.activationOfferId}`
+                    `当前快照缺少激活元数据；使用缓存的 ${source} streak 快照 | offerId=${streak.activationOfferId}`
                 )
             } else {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `Using visual-search activation metadata from streak model | offerId=${streak.activationOfferId}`
+                    `正在使用 streak 模型中的视觉搜索激活元数据 | offerId=${streak.activationOfferId}`
                 )
             }
 
@@ -391,13 +391,13 @@ export class VisualSearch extends BaseActivity {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `Activation offer missing from the current snapshot; using cached ${source} offer snapshot | offerId=${offer.offerId}`
+                    `当前快照中缺少激活活动；正在使用缓存的 ${source} 活动快照 | offerId=${offer.offerId}`
                 )
             } else {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `Using visual-search activation metadata from generic offer | offerId=${offer.offerId}`
+                    `正在使用通用活动中的视觉搜索激活元数据 | offerId=${offer.offerId}`
                 )
             }
 
@@ -428,7 +428,7 @@ export class VisualSearch extends BaseActivity {
                 this.bot.logger.info(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `Daily visual search done | pointsGained=${gained} | currentBalance=${res.balance} | query="${visual.query}"`,
+                    `今日视觉搜索已完成 | pointsGained=${gained} | currentBalance=${res.balance} | query="${visual.query}"`,
                     'green'
                 )
                 return gained
@@ -438,7 +438,7 @@ export class VisualSearch extends BaseActivity {
                 this.bot.logger.info(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `Daily visual search registered | pointsGained=0 (streak pays out on milestones) | query="${visual.query}"`,
+                    `今日视觉搜索已登记 | pointsGained=0（streak 在里程碑时发放积分）| query="${visual.query}"`,
                     'green'
                 )
                 return 0
@@ -448,13 +448,13 @@ export class VisualSearch extends BaseActivity {
                 this.bot.logger.warn(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `Visual search was reported but not credited (attempt ${attempt}/${MAX_ATTEMPTS}) | query="${visual.query}"`
+                    `视觉搜索已上报但未入账（尝试 ${attempt}/${MAX_ATTEMPTS}）| query="${visual.query}"`
                 )
             } else {
                 this.bot.logger.warn(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `No reportActivity acknowledgement (attempt ${attempt}/${MAX_ATTEMPTS}) | query="${visual.query}"`
+                    `未收到 reportActivity 确认（尝试 ${attempt}/${MAX_ATTEMPTS}）| query="${visual.query}"`
                 )
             }
 
@@ -464,7 +464,7 @@ export class VisualSearch extends BaseActivity {
         this.bot.logger.warn(
             this.bot.isMobile,
             'VISUAL-SEARCH',
-            `Daily visual search did not credit after ${MAX_ATTEMPTS} attempts`
+            `经过 ${MAX_ATTEMPTS} 次尝试后，今日视觉搜索仍未入账`
         )
         return 0
     }
@@ -486,7 +486,7 @@ export class VisualSearch extends BaseActivity {
                 this.bot.logger.warn(
                     this.bot.isMobile,
                     'VISUAL-SEARCH',
-                    `Could not obtain a visual search from one candidate (attempt ${attempt}/${MAX_ATTEMPTS})`
+                    `无法从某个候选中获取视觉搜索（尝试 ${attempt}/${MAX_ATTEMPTS}）`
                 )
                 acquisitionFailures++
                 if (acquisitionFailures >= MAX_ACQUISITION_FAILURES_PER_ATTEMPT) return null
@@ -501,7 +501,7 @@ export class VisualSearch extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 'VISUAL-SEARCH',
-                `Skipping already-tried bcid=${visual.bcid.slice(0, 14)} | candidatesRemaining=${candidateSeeds.length}`
+                `跳过已尝试过的 bcid=${visual.bcid.slice(0, 14)} | candidatesRemaining=${candidateSeeds.length}`
             )
             await this.bot.utils.wait(this.bot.utils.randomDelay(1000, 2000))
         }
@@ -509,7 +509,7 @@ export class VisualSearch extends BaseActivity {
         this.bot.logger.warn(
             this.bot.isMobile,
             'VISUAL-SEARCH',
-            `No unused visual-search seed remains (attempt ${attempt}/${MAX_ATTEMPTS})`
+            `没有剩余的未使用视觉搜索种子（尝试 ${attempt}/${MAX_ATTEMPTS}）`
         )
         return null
     }
@@ -536,7 +536,7 @@ export class VisualSearch extends BaseActivity {
         this.bot.logger.debug(
             this.bot.isMobile,
             'VISUAL-SEARCH',
-            `Streak still open after reporting | days=${streak.completedDays}/${streak.totalDays} | activities=${streak.activitiesCompleted}/${streak.activitiesTotal}`
+            `上报后 streak 仍未完成 | days=${streak.completedDays}/${streak.totalDays} | activities=${streak.activitiesCompleted}/${streak.activitiesTotal}`
         )
         return false
     }

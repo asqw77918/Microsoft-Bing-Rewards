@@ -61,7 +61,7 @@ export class EdgeBrowsing extends BaseActivity {
     public async run(data: DashboardData, signal?: AbortSignal): Promise<void> {
         const accessToken = this.bot.accessToken
         if (!accessToken) {
-            this.bot.logger.warn(this.bot.isMobile, LOG_TAG, 'Skipping: mobile app access token is unavailable')
+            this.bot.logger.warn(this.bot.isMobile, LOG_TAG, '跳过：移动应用访问令牌不可用')
             return
         }
 
@@ -77,7 +77,7 @@ export class EdgeBrowsing extends BaseActivity {
                     this.bot.logger.info(
                         this.bot.isMobile,
                         LOG_TAG,
-                        'Browsing Streak on Edge is not available for this account'
+                        '此账号无法使用 Edge 上的浏览 Streak'
                     )
                     return
                 }
@@ -93,7 +93,7 @@ export class EdgeBrowsing extends BaseActivity {
 
             const complete = settings.promotion.attributes['complete']?.toLowerCase() === 'true'
             if (complete) {
-                this.bot.logger.info(this.bot.isMobile, LOG_TAG, 'Browsing Streak on Edge is already complete')
+                this.bot.logger.info(this.bot.isMobile, LOG_TAG, 'Edge 上的浏览 Streak 已完成')
                 return
             }
 
@@ -117,7 +117,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.info(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Started background Edge browsing activity | offerId=${settings.offerId} | type=${settings.activityType}` +
+                `已开始后台 Edge 浏览活动 | offerId=${settings.offerId} | type=${settings.activityType}` +
                     ` | targetMinutes=${TARGET_DURATION_MINUTES} | reports=${reportCount}` +
                     ` | serverIntervalMinutes=${settings.reportIntervalMinutes}` +
                     ` | jitterSeconds=${REPORT_JITTER_MIN_MS / 1000}-${REPORT_JITTER_MAX_MS / 1000}` +
@@ -134,7 +134,7 @@ export class EdgeBrowsing extends BaseActivity {
                 )
 
                 if (!(await this.wait(progress.delayBeforeReport(reportNumber), signal))) {
-                    this.bot.logger.debug(this.bot.isMobile, LOG_TAG, 'Background activity cancelled')
+                    this.bot.logger.debug(this.bot.isMobile, LOG_TAG, '后台活动已取消')
                     return
                 }
 
@@ -147,7 +147,7 @@ export class EdgeBrowsing extends BaseActivity {
                     this.bot.logger.warn(
                         this.bot.isMobile,
                         LOG_TAG,
-                        `Edge browsing report failed | report=${reportNumber}/${reportCount}` +
+                        `Edge 浏览上报失败 | report=${reportNumber}/${reportCount}` +
                             ` | status=${status ?? 'unknown'}` +
                             ` | message=${error instanceof Error ? error.message : String(error)}`
                     )
@@ -179,7 +179,7 @@ export class EdgeBrowsing extends BaseActivity {
 
                 const afterReport = progress.snapshot(reportNumber)
                 const message =
-                    `Submitted Edge browsing report | report=${reportNumber}/${reportCount} | status=${result.status}` +
+                    `已提交 Edge 浏览上报 | report=${reportNumber}/${reportCount} | status=${result.status}` +
                     ` | duplicate=${result.duplicate}` +
                     ` | cookies=${result.cookieNames.join(',') || 'none'}` +
                     ` | reportsRemaining=${afterReport.reportsRemaining}` +
@@ -204,7 +204,7 @@ export class EdgeBrowsing extends BaseActivity {
 
             const finished = progress.snapshot(reportsProcessed)
             const summary =
-                `Finished background Edge browsing activity | reports=${reportsProcessed}` +
+                `后台 Edge 浏览活动已完成 | reports=${reportsProcessed}` +
                 ` | reportsCompleted=${reportsProcessed}/${reportCount}` +
                 ` | reportsRemaining=${serverComplete ? 0 : finished.reportsRemaining}` +
                 ` | scheduledMinutesCovered=${finished.scheduledMinutesCovered}/${TARGET_DURATION_MINUTES}` +
@@ -221,14 +221,14 @@ export class EdgeBrowsing extends BaseActivity {
             }
         } catch (error) {
             if (signal?.aborted) {
-                this.bot.logger.debug(this.bot.isMobile, LOG_TAG, 'Background activity cancelled')
+                this.bot.logger.debug(this.bot.isMobile, LOG_TAG, '后台活动已取消')
                 return
             }
 
             this.bot.logger.error(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Background Edge browsing activity failed | message=${
+                `后台 Edge 浏览活动失败 | message=${
                     error instanceof Error ? error.message : String(error)
                 }`
             )
@@ -285,7 +285,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 LOG_TAG,
-                'No Edge browsing activation metadata present in the streak model or generic offers across the current, desktop, or cached mobile Rewards snapshots'
+                '当前、桌面或缓存的移动端 Rewards 快照中的 streak 模型或通用活动中均未找到 Edge 浏览激活元数据'
             )
             return 'absent'
         }
@@ -294,7 +294,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.info(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Edge browsing activation offer already completed | offerId=${offer.offerId}`,
+                `Edge 浏览激活活动已完成 | offerId=${offer.offerId}`,
                 'green'
             )
             return 'already-active'
@@ -304,7 +304,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Activation offer present but missing a hash | offerId=${offer.offerId}`
+                `激活活动存在但缺少 hash | offerId=${offer.offerId}`
             )
             return 'failed'
         }
@@ -313,7 +313,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Activation offer is not actionable | offerId=${offer.offerId}`
+                `激活活动不可操作 | offerId=${offer.offerId}`
             )
             return 'failed'
         }
@@ -323,7 +323,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 LOG_TAG,
-                'Skipping activation: "reportActivity" action id not discovered in bundle'
+                '跳过激活：未在 bundle 中发现 "reportActivity" 动作 id'
             )
             return 'failed'
         }
@@ -334,7 +334,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Skipping activation: no valid activity type found | offerId=${offer.offerId}`
+                `跳过激活：未找到有效的活动类型 | offerId=${offer.offerId}`
             )
             return 'failed'
         }
@@ -342,7 +342,7 @@ export class EdgeBrowsing extends BaseActivity {
         this.bot.logger.info(
             this.bot.isMobile,
             LOG_TAG,
-            `Activating Browsing Streak on Edge | offerId=${offer.offerId} | activationSource=${offer.activationSource} | activityType=${metadata.activityType} | activityTypeSource=${metadata.activityTypeSource} | promotional=${metadata.isPromotional} | geo=${this.bot.userData.geoLocale}`
+            `正在激活 Edge 上的浏览 Streak | offerId=${offer.offerId} | activationSource=${offer.activationSource} | activityType=${metadata.activityType} | activityTypeSource=${metadata.activityTypeSource} | promotional=${metadata.isPromotional} | geo=${this.bot.userData.geoLocale}`
         )
 
         try {
@@ -363,7 +363,7 @@ export class EdgeBrowsing extends BaseActivity {
                 this.bot.logger.info(
                     this.bot.isMobile,
                     LOG_TAG,
-                    `Activated Browsing Streak on Edge | offerId=${offer.offerId} | acknowledged=${acknowledged} | confirmed=${confirmed}`,
+                    `Edge 上的浏览 Streak 已激活 | offerId=${offer.offerId} | acknowledged=${acknowledged} | confirmed=${confirmed}`,
                     'green'
                 )
                 return 'activated'
@@ -372,14 +372,14 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Activation not acknowledged | offerId=${offer.offerId} | status=${status}`
+                `激活未获确认 | offerId=${offer.offerId} | status=${status}`
             )
             return 'failed'
         } catch (error) {
             this.bot.logger.error(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Activation error | offerId=${offer.offerId} | ${error instanceof Error ? error.message : String(error)}`
+                `激活出错 | offerId=${offer.offerId} | ${error instanceof Error ? error.message : String(error)}`
             )
             return 'failed'
         }
@@ -399,7 +399,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Could not verify activation state | offerId=${offerId} | ${error instanceof Error ? error.message : String(error)}`
+                `无法验证激活状态 | offerId=${offerId} | ${error instanceof Error ? error.message : String(error)}`
             )
             return false
         }
@@ -412,7 +412,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 LOG_TAG,
-                'Desktop dashboard fetch failed - falling back to the dashboard from the mobile pass'
+                '获取桌面端仪表盘失败 - 回退到移动端轮次中的仪表盘'
             )
             return fallback
         }
@@ -521,13 +521,13 @@ export class EdgeBrowsing extends BaseActivity {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     LOG_TAG,
-                    `Activation metadata missing from the current snapshot; using cached ${source} streak snapshot | offerId=${streak.activationOfferId}`
+                    `当前快照中缺少激活元数据；正在使用缓存的 ${source} streak 快照 | offerId=${streak.activationOfferId}`
                 )
             } else {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     LOG_TAG,
-                    `Using Edge browsing activation metadata from streak model | offerId=${streak.activationOfferId}`
+                    `正在使用 streak 模型中的 Edge 浏览激活元数据 | offerId=${streak.activationOfferId}`
                 )
             }
 
@@ -568,13 +568,13 @@ export class EdgeBrowsing extends BaseActivity {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     LOG_TAG,
-                    `Activation offer missing from the current snapshot; using cached ${source} offer snapshot | offerId=${offer.offerId}`
+                    `当前快照中缺少激活活动；正在使用缓存的 ${source} 活动快照 | offerId=${offer.offerId}`
                 )
             } else {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     LOG_TAG,
-                    `Using Edge browsing activation metadata from generic offer | offerId=${offer.offerId}`
+                    `使用通用活动中的 Edge 浏览激活元数据 | offerId=${offer.offerId}`
                 )
             }
 
@@ -605,7 +605,7 @@ export class EdgeBrowsing extends BaseActivity {
                 this.bot.logger.debug(
                     this.bot.isMobile,
                     LOG_TAG,
-                    `Could not verify Edge browsing completion: promotion is absent | report=${reportNumber}/${reportCount}`
+                    `无法验证 Edge 浏览完成情况：活动不存在 | report=${reportNumber}/${reportCount}`
                 )
                 return false
             }
@@ -614,14 +614,14 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Refreshed Edge browsing server state | report=${reportNumber}/${reportCount} | complete=${complete}`
+                `已刷新 Edge 浏览服务器状态 | report=${reportNumber}/${reportCount} | complete=${complete}`
             )
             return complete
         } catch (error) {
             this.bot.logger.debug(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Could not refresh Edge browsing server state | report=${reportNumber}/${reportCount}` +
+                `无法刷新 Edge 浏览服务器状态 | report=${reportNumber}/${reportCount}` +
                     ` | message=${error instanceof Error ? error.message : String(error)}`
             )
             return false
@@ -638,7 +638,7 @@ export class EdgeBrowsing extends BaseActivity {
         this.bot.logger.info(
             this.bot.isMobile,
             LOG_TAG,
-            `Microsoft reports Edge browsing activity complete | report=${reportNumber}/${reportCount}` +
+            `Microsoft 报告 Edge 浏览活动已完成 | report=${reportNumber}/${reportCount}` +
                 ` | accepted=${acceptedReports} | duplicates=${duplicateReports} | failed=${failedReports}`,
             'green'
         )
@@ -650,7 +650,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.info(
                 this.bot.isMobile,
                 LOG_TAG,
-                'Browsing Streak on Edge is not available for this account'
+                '此账号无法使用 Edge 上的浏览 Streak'
             )
             return null
         }
@@ -661,7 +661,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Skipping: promotion metadata is incomplete | offerId=${offerId || 'missing'}` +
+                `跳过：活动元数据不完整 | offerId=${offerId || 'missing'}` +
                     ` | type=${activityType || 'missing'}`
             )
             return null
@@ -678,7 +678,7 @@ export class EdgeBrowsing extends BaseActivity {
             this.bot.logger.warn(
                 this.bot.isMobile,
                 LOG_TAG,
-                `Invalid server report interval; using fallback | received=${
+                `服务器上报间隔无效；正在使用回退值 | received=${
                     promotion.attributes['report_per_minutes'] ?? 'missing'
                 } | fallbackMinutes=${DEFAULT_REPORT_INTERVAL_MINUTES}`
             )
@@ -728,7 +728,7 @@ export class EdgeBrowsing extends BaseActivity {
         this.bot.logger.debug(
             this.bot.isMobile,
             LOG_TAG,
-            `Edge activity response | offerId=${activity?.a?.offerid ?? 'unknown'}` +
+            `Edge 活动响应 | offerId=${activity?.a?.offerid ?? 'unknown'}` +
                 ` | type=${activity?.type ?? 'unknown'} | quantity=${activity?.q ?? 'unknown'}`
         )
 
@@ -798,7 +798,7 @@ export class EdgeBrowsing extends BaseActivity {
         failedReports: number
     ): string {
         return (
-            `Edge browsing progress | reportsCompleted=${progress.reportsCompleted}/${progress.reportsTotal}` +
+            `Edge 浏览进度 | reportsCompleted=${progress.reportsCompleted}/${progress.reportsTotal}` +
             ` | reportsRemaining=${progress.reportsRemaining}` +
             ` | scheduledMinutesCovered=${progress.scheduledMinutesCovered}/${TARGET_DURATION_MINUTES}` +
             `${progress.nextReportInSeconds === null ? '' : ` | nextReportInSeconds=${progress.nextReportInSeconds}`}` +

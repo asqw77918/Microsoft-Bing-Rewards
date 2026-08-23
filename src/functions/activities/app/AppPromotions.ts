@@ -16,7 +16,7 @@ export class AppPromotions extends BaseActivity {
             this.bot.logger.info(
                 this.bot.isMobile,
                 'APP-PROMOTIONS',
-                'All "App Promotions" items have already been completed'
+                '所有 "App Promotions" 项目均已完成'
             )
             return
         }
@@ -24,7 +24,7 @@ export class AppPromotions extends BaseActivity {
         this.bot.logger.info(
             this.bot.isMobile,
             'APP-PROMOTIONS',
-            `Started solving "App Promotions" items | remaining=${pending.length}`
+            `开始处理 "App Promotions" 项目 | remaining=${pending.length}`
         )
         for (const [index, promotion] of pending.entries()) {
             await this.bot.activities.doAppReward(promotion)
@@ -32,6 +32,6 @@ export class AppPromotions extends BaseActivity {
                 await this.bot.utils.wait(this.bot.utils.randomDelay(5000, 15000))
             }
         }
-        this.bot.logger.info(this.bot.isMobile, 'APP-PROMOTIONS', 'Finished processing "App Promotions" items')
+        this.bot.logger.info(this.bot.isMobile, 'APP-PROMOTIONS', '已处理完 "App Promotions" 项目')
     }
 }

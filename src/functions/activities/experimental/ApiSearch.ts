@@ -16,17 +16,17 @@ export class ApiSearch extends BaseActivity {
         const startBalance = Number(this.bot.userData.currentPoints ?? 0)
         let totalGained = 0
 
-        this.bot.logger.info(isMobile, 'SEARCH-BING', `Starting Bing searches | currentBalance=${startBalance}`)
+        this.bot.logger.info(isMobile, 'SEARCH-BING', `正在开始 Bing 搜索 | currentBalance=${startBalance}`)
 
         try {
             const missing = await this.searchProgress.getMissing(isMobile)
             this.bot.logger.info(
                 isMobile,
                 'SEARCH-BING',
-                `Search points remaining | edge=${missing.edgePoints} | desktop=${missing.desktopPoints} | mobile=${missing.mobilePoints}`
+                `剩余搜索积分 | edge=${missing.edgePoints} | desktop=${missing.desktopPoints} | mobile=${missing.mobilePoints}`
             )
             if (missing.totalPoints <= 0) {
-                this.bot.logger.info(isMobile, 'SEARCH-BING', 'No search points to earn, skipping')
+                this.bot.logger.info(isMobile, 'SEARCH-BING', '没有可赚取的搜索积分，跳过')
                 return 0
             }
             let remainingPoints = missing.totalPoints
@@ -34,13 +34,13 @@ export class ApiSearch extends BaseActivity {
             const queryQueue = new SearchQueryQueue(this.bot)
             const topicCount = await queryQueue.prepare()
             if (!topicCount) {
-                this.bot.logger.warn(isMobile, 'SEARCH-BING', 'No main search topics available, skipping')
+                this.bot.logger.warn(isMobile, 'SEARCH-BING', '没有可用的主要搜索主题，跳过')
                 return 0
             }
             this.bot.logger.info(
                 isMobile,
                 'SEARCH-BING',
-                `Query queue ready | mainTopics=${topicCount} | clusterSearch=${this.bot.config.searchSettings.clusterSearch}`
+                `查询队列就绪 | mainTopics=${topicCount} | clusterSearch=${this.bot.config.searchSettings.clusterSearch}`
             )
 
             let stagnant = 0
@@ -50,7 +50,7 @@ export class ApiSearch extends BaseActivity {
             while (performed < MAX_SEARCHES) {
                 const query = await queryQueue.next()
                 if (!query) {
-                    this.bot.logger.warn(isMobile, 'SEARCH-BING', 'Query queue exhausted, stopping')
+                    this.bot.logger.warn(isMobile, 'SEARCH-BING', '查询队列已耗尽，停止')
                     break
                 }
 
@@ -58,7 +58,7 @@ export class ApiSearch extends BaseActivity {
                 performed++
 
                 if (!res.ig) {
-                    this.bot.logger.warn(isMobile, 'SEARCH-BING', `No IG for query="${query}" - skipping`)
+                    this.bot.logger.warn(isMobile, 'SEARCH-BING', `查询 "${query}" 没有 IG - 跳过`)
                     continue
                 }
 
@@ -93,7 +93,7 @@ export class ApiSearch extends BaseActivity {
                         this.bot.logger.debug(
                             isMobile,
                             'SEARCH-BING',
-                            `Could not refresh the ${isMobile ? 'mobile' : 'desktop'} search quota | ${
+                            `无法刷新${isMobile ? '移动端' : '桌面端'}搜索配额 | ${
                                 error instanceof Error ? error.message : String(error)
                             }`
                         )
@@ -114,7 +114,7 @@ export class ApiSearch extends BaseActivity {
                     this.bot.logger.info(
                         isMobile,
                         'SEARCH-BING',
-                        `pointsGained=${gained} | currentBalance=${res.balance} | query="${query}"` +
+                        `获得积分 | pointsGained=${gained} | currentBalance=${res.balance} | query="${query}"` +
                             ` | remaining=${remainingPoints} | searchPts=${cap}`,
                         'green'
                     )
@@ -123,7 +123,7 @@ export class ApiSearch extends BaseActivity {
                     this.bot.logger.info(
                         isMobile,
                         'SEARCH-BING',
-                        `No points gained ${stagnant}/${STAGNANT_LIMIT} | query="${query}"` +
+                        `无积分 ${stagnant}/${STAGNANT_LIMIT} | query="${query}"` +
                             ` | remaining=${remainingPoints} | searchPts=${cap}`
                     )
                 }
@@ -132,7 +132,7 @@ export class ApiSearch extends BaseActivity {
                     this.bot.logger.info(
                         isMobile,
                         'SEARCH-BING',
-                        `${isMobile ? 'Mobile' : 'Desktop'} search quota complete` +
+                        `${isMobile ? '移动端' : '桌面端'}搜索配额已完成` +
                             ` | remaining=${remainingPoints} | responseSearchPts=${cap}`,
                         'green'
                     )
@@ -143,7 +143,7 @@ export class ApiSearch extends BaseActivity {
                     this.bot.logger.warn(
                         isMobile,
                         'SEARCH-BING',
-                        `No points for ${STAGNANT_LIMIT} searches in a row, aborting`
+                        `连续 ${STAGNANT_LIMIT} 次搜索未获得积分，正在中止`
                     )
                     break
                 }
@@ -159,14 +159,14 @@ export class ApiSearch extends BaseActivity {
             this.bot.logger.info(
                 isMobile,
                 'SEARCH-BING',
-                `Completed Bing searches | pointsGained=${totalGained} | currentBalance=${this.bot.userData.currentPoints} | previousBalance=${startBalance} | searches=${performed}`
+                `Bing 搜索已完成 | pointsGained=${totalGained} | currentBalance=${this.bot.userData.currentPoints} | previousBalance=${startBalance} | searches=${performed}`
             )
             return totalGained
         } catch (error) {
             this.bot.logger.error(
                 isMobile,
                 'SEARCH-BING',
-                `Error in doSearch | ${error instanceof Error ? error.message : String(error)}`
+                `doSearch 出错 | ${error instanceof Error ? error.message : String(error)}`
             )
             return totalGained
         }
@@ -187,19 +187,19 @@ export class ApiSearch extends BaseActivity {
             const queryQueue = new SearchQueryQueue(this.bot)
             const topicCount = await queryQueue.prepare()
             if (!topicCount) {
-                this.bot.logger.warn(isMobile, tracker.context, 'No main search topics available, skipping')
+                this.bot.logger.warn(isMobile, tracker.context, '没有可用的主要搜索主题，跳过')
                 return 0
             }
             this.bot.logger.info(
                 isMobile,
                 tracker.context,
-                `Query queue ready | mainTopics=${topicCount} | clusterSearch=${this.bot.config.searchSettings.clusterSearch}`
+                `查询队列就绪 | mainTopics=${topicCount} | clusterSearch=${this.bot.config.searchSettings.clusterSearch}`
             )
 
             while (!tracker.done() && performed < tracker.maxSearches && stagnant < tracker.stagnantLimit) {
                 const query = await queryQueue.next()
                 if (!query) {
-                    this.bot.logger.warn(isMobile, tracker.context, 'Query queue exhausted, stopping')
+                    this.bot.logger.warn(isMobile, tracker.context, '查询队列已耗尽，停止')
                     break
                 }
 
@@ -207,7 +207,7 @@ export class ApiSearch extends BaseActivity {
                 performed++
 
                 if (!res.ig) {
-                    this.bot.logger.warn(isMobile, tracker.context, `No IG for query="${query}" - skipping`)
+                    this.bot.logger.warn(isMobile, tracker.context, `查询 "${query}" 未返回 IG - 跳过`)
                     continue
                 }
 
@@ -226,7 +226,7 @@ export class ApiSearch extends BaseActivity {
                     this.bot.logger.info(
                         isMobile,
                         tracker.context,
-                        `no points ${stagnant}/${tracker.stagnantLimit} | query="${query}" | ${tracker.progress()}`
+                        `无积分 ${stagnant}/${tracker.stagnantLimit} | query="${query}" | ${tracker.progress()}`
                     )
                 }
 
@@ -241,25 +241,25 @@ export class ApiSearch extends BaseActivity {
             this.bot.logger.error(
                 isMobile,
                 tracker.context,
-                `Bonus session error | ${error instanceof Error ? error.message : String(error)}`
+                `奖励搜索会话出错 | ${error instanceof Error ? error.message : String(error)}`
             )
         }
 
         const done = tracker.done() && !tracker.offerLost
         const reason = done
-            ? 'offer complete'
+            ? '活动完成'
             : tracker.offerLost
-              ? 'offer no longer present'
+              ? '活动已不存在'
               : performed >= tracker.maxSearches
-                ? 'reached maxBonusSearches'
+                ? '已达到 maxBonusSearches 上限'
                 : stagnant >= tracker.stagnantLimit
-                  ? `${tracker.stagnantLimit} idle searches`
-                  : 'query pool exhausted'
+                  ? `${tracker.stagnantLimit} 次无积分搜索`
+                  : '查询池已用尽'
 
         this.bot.logger.info(
             isMobile,
             tracker.context,
-            `Bonus farming ${done ? 'complete' : 'stopped'} (${reason}) | pointsGained=${totalGained} | currentBalance=${this.bot.userData.currentPoints} | ${tracker.progress()} | searches=${performed}`,
+            `奖励搜索耕种${done ? '完成' : '已停止'}（${reason}） | pointsGained=${totalGained} | currentBalance=${this.bot.userData.currentPoints} | ${tracker.progress()} | searches=${performed}`,
             done || totalGained > 0 ? 'green' : undefined
         )
         return totalGained
