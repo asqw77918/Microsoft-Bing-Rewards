@@ -1,0 +1,5 @@
+# GitHub Actions 工作流文件不参与格式化：
+# 修改 .github/workflows/ 需要 workflows 权限，且格式化对 workflow 功能无意义
+.github/
+# 锁文件无需格式化
+package-lock.json

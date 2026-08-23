@@ -77,6 +77,10 @@ jobs:
                   git config user.name "github-actions[bot]"
                   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
                   git add -A
+                  if git diff --cached --quiet; then
+                    echo "No formatting changes to commit (already handled by the pull request step)." >> "$GITHUB_STEP_SUMMARY"
+                    exit 0
+                  fi
                   git commit -m 'style: apply automated formatting'
                   git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:"${{ github.ref_name }}"
                   {
