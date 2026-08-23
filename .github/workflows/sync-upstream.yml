@@ -1,5 +1,7 @@
 name: Sync Upstream
 
+# v2: force re-registration of this workflow in this repository
+
 on:
   schedule:
     # 每天 UTC 03:17 运行（北京时间 11:17），可自行调整

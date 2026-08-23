@@ -1,5 +1,7 @@
 name: Release and Docker Push
 
+# v2: force re-registration of this workflow in this repository
+
 on:
     push:
         branches: ['v3', 'v4']
