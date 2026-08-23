@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+<<<<<<< HEAD
 # 保留调用者注入的任何值（例如来自 entrypoint 的 RUN_ON_START 前缀的 SKIP_RANDOM_SLEEP=true），
 # 以防 env 文件覆盖它。
+=======
+>>>>>>> upstream/v4
 _SKIP_SLEEP_OVERRIDE="${SKIP_RANDOM_SLEEP:-}"
 
 # 恢复 cron 启动此任务时丢失的容器环境（ACCOUNT_*、CONFIG_* 等）
@@ -36,9 +39,12 @@ is_run_daily_process() {
     tr '\0' ' ' < "/proc/$pid/cmdline" | grep -q 'scripts/docker/run_daily\.sh'
 }
 
+<<<<<<< HEAD
 # -------------------------------
 #  功能：检查并修复锁文件完整性
 # -------------------------------
+=======
+>>>>>>> upstream/v4
 self_heal_lockfile() {
     # 锁文件存在但为空 → 删除
     if [ -f "$LOCKFILE" ]; then
@@ -65,8 +71,11 @@ self_heal_lockfile() {
             return
         fi
 
+<<<<<<< HEAD
         # PID 重用绝不能让此脚本将不相关的进程视为奖励运行，
         # 更不能将其作为"卡住"进程终止。
+=======
+>>>>>>> upstream/v4
         if ! is_run_daily_process "$lock_content"; then
             echo "[$(date)] [run_daily.sh] 锁文件 PID $lock_content 不是 run_daily.sh → 删除过期锁。"
             rm -f "$LOCKFILE"
@@ -74,9 +83,12 @@ self_heal_lockfile() {
     fi
 }
 
+<<<<<<< HEAD
 # -------------------------------
 #  功能：获取锁
 # -------------------------------
+=======
+>>>>>>> upstream/v4
 acquire_lock() {
     local max_attempts=5
     local attempt=0
@@ -91,7 +103,12 @@ acquire_lock() {
     timeout_seconds=$((timeout_hours * 3600))
 
     while [ $attempt -lt $max_attempts ]; do
+<<<<<<< HEAD
         # 尝试用当前 PID 创建锁
+=======
+        attempt=$((attempt + 1))
+        # Try to create lock with current PID
+>>>>>>> upstream/v4
         if (set -C; echo "$$" > "$LOCKFILE") 2>/dev/null; then
             echo "[$(date)] [run_daily.sh] 锁获取成功 (PID: $$)"
             return 0
@@ -137,18 +154,24 @@ acquire_lock() {
             fi
         fi
 
+<<<<<<< HEAD
         echo "[$(date)] [run_daily.sh] 锁由 PID $existing_pid 持有，第 $((attempt + 1))/$max_attempts 次尝试"
+=======
+        echo "[$(date)] [run_daily.sh] Lock held by PID $existing_pid, attempt $attempt/$max_attempts"
+>>>>>>> upstream/v4
         sleep 2
-        attempt=$((attempt + 1))
     done
 
     echo "[$(date)] [run_daily.sh] $max_attempts 次尝试后仍无法获取锁；退出。"
     return 1
 }
 
+<<<<<<< HEAD
 # -------------------------------
 #  功能：释放锁
 # -------------------------------
+=======
+>>>>>>> upstream/v4
 release_lock() {
     if [ -f "$LOCKFILE" ]; then
         local lock_pid
@@ -165,15 +188,22 @@ trap release_lock EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
+<<<<<<< HEAD
 # -------------------------------
 #  主执行流程
 # -------------------------------
 echo "[$(date)] [run_daily.sh] 当前进程 PID: $$"
+=======
+echo "[$(date)] [run_daily.sh] Current process PID: $$"
+>>>>>>> upstream/v4
 
 # 继续之前先自愈任何损坏或空的锁
 self_heal_lockfile
 
+<<<<<<< HEAD
 # 尝试安全获取锁。锁被持有是正常跳过；无效的调度器配置是错误。
+=======
+>>>>>>> upstream/v4
 if acquire_lock; then
     :
 else
@@ -214,8 +244,11 @@ fi
 echo "[$(date)] [run_daily.sh] 正在启动脚本..."
 run_status=0
 if [ "${API_MODE:-false}" = "true" ]; then
+<<<<<<< HEAD
     # API 集成模式：委托给 API 服务器，使仪表板具有完整的可见性和控制权。
     # trigger.js 调用 POST /start 并等待空闲状态。
+=======
+>>>>>>> upstream/v4
     if node scripts/api/trigger.js; then
         echo "[$(date)] [run_daily.sh] 脚本运行成功（通过 API）。"
     else

@@ -53,6 +53,12 @@ interface AccountStats {
     error?: string
 }
 
+interface AccountRunResult {
+    initialPoints: number
+    collectedPoints: number
+    skippedForBotWarning?: boolean
+}
+
 const executionContext = new AsyncLocalStorage<ExecutionContext>()
 
 export function getCurrentContext(): ExecutionContext {
@@ -103,6 +109,7 @@ export class MicrosoftRewardsBot {
         mobile: null,
         desktop: null
     }
+    public searchTopicsCache: { key: string; topics: Promise<string[]> } | null = null
 
     public accessToken = ''
     public cookies: { mobile: Cookie[]; desktop: Cookie[] }
@@ -234,7 +241,6 @@ export class MicrosoftRewardsBot {
         this.warnExperimental()
     }
 
-    // Move to utils
     private warnExperimental(): void {
         const exp = this.config.experimental
         const searchFeatures = [exp.apiSearch && 'apiSearch', exp.apiSearchOnBing && 'apiSearchOnBing'].filter(
@@ -448,9 +454,7 @@ export class MicrosoftRewardsBot {
                     'Accept-Language': this.accountLocale.acceptLanguage
                 })
 
-                const result: { initialPoints: number; collectedPoints: number } | undefined = await this.Main(
-                    account
-                ).catch(error => {
+                const result: AccountRunResult | undefined = await this.Main(account).catch(error => {
                     void this.logger.error(
                         true,
                         'FLOW',
@@ -466,21 +470,48 @@ export class MicrosoftRewardsBot {
                     const accountInitialPoints = result.initialPoints ?? 0
                     const accountFinalPoints = accountInitialPoints + collectedPoints
 
-                    accountStats.push({
-                        email: accountEmail,
-                        initialPoints: accountInitialPoints,
-                        finalPoints: accountFinalPoints,
-                        collectedPoints: collectedPoints,
-                        duration: parseFloat(durationSeconds),
-                        success: true
-                    })
+                    if (result.skippedForBotWarning) {
+                        accountStats.push({
+                            email: accountEmail,
+                            initialPoints: accountInitialPoints,
+                            finalPoints: accountInitialPoints,
+                            collectedPoints: 0,
+                            duration: parseFloat(durationSeconds),
+                            success: false,
+                            error: 'Microsoft bot-score warning detected'
+                        })
 
+<<<<<<< HEAD
                     this.logger.info(
                         'main',
                         'ACCOUNT-END',
                         `账号处理完成: ${accountEmail} | 获得积分=${collectedPoints} | 之前余额=${accountInitialPoints} | 当前余额=${accountFinalPoints} | 耗时(秒)=${durationSeconds}`,
                         'green'
                     )
+=======
+                        this.logger.warn(
+                            'main',
+                            'ACCOUNT-SKIP',
+                            `Skipped account: ${accountEmail} | reason=Fraud_UserWarning_BotScore_UX | durationSeconds=${durationSeconds}`
+                        )
+                    } else {
+                        accountStats.push({
+                            email: accountEmail,
+                            initialPoints: accountInitialPoints,
+                            finalPoints: accountFinalPoints,
+                            collectedPoints: collectedPoints,
+                            duration: parseFloat(durationSeconds),
+                            success: true
+                        })
+
+                        this.logger.info(
+                            'main',
+                            'ACCOUNT-END',
+                            `Completed account: ${accountEmail} | pointsGained=${collectedPoints} | previousBalance=${accountInitialPoints} | currentBalance=${accountFinalPoints} | durationSeconds=${durationSeconds}`,
+                            'green'
+                        )
+                    }
+>>>>>>> upstream/v4
                 } else {
                     accountStats.push({
                         email: accountEmail,
@@ -569,19 +600,26 @@ export class MicrosoftRewardsBot {
         return session
     }
 
-    async Main(account: Account): Promise<{ initialPoints: number; collectedPoints: number }> {
+    async Main(account: Account): Promise<AccountRunResult> {
         const accountEmail = account.email
         this.logger.info('main', 'FLOW', `开始处理账号会话: ${accountEmail}`)
 
-        // Drop cookies, page snapshots and app credentials from the previous account
         this.accessToken = ''
         this.cookies = { mobile: [], desktop: [] }
+        this.fingerprintMobile = undefined
+        this.fingerprintDesktop = undefined
         this.reactSnapshot = null
         this.reactSnapshots = { mobile: null, desktop: null }
+        this.searchTopicsCache = null
 
         const apiSearch = this.config.experimental.apiSearch
         const apiSearchOnBing = this.config.experimental.apiSearchOnBing
         const fullApi = apiSearch && (apiSearchOnBing || !this.config.activities.searchOnBing)
+        const needsAppActivities =
+            this.config.workers.doDailyCheckIn ||
+            this.config.workers.doAppPromotions ||
+            this.config.workers.doReadToEarn
+        const needsAppAccessToken = this.config.experimental.edgeBrowsing || needsAppActivities
 
         let mobileSession: BrowserSession | null = null
         let desktopSession: BrowserSession | null = null
@@ -621,6 +659,7 @@ export class MicrosoftRewardsBot {
 
                 await this.login.login(this.mainMobilePage, account)
 
+<<<<<<< HEAD
                 try {
                     this.accessToken = await this.login.getAppAccessToken(this.mainMobilePage, accountEmail)
                 } catch (error) {
@@ -630,6 +669,19 @@ export class MicrosoftRewardsBot {
                         `获取移动端访问令牌失败: ${error instanceof Error ? error.message : String(error)}`
                     )
                     this.accessToken = ''
+=======
+                if (needsAppAccessToken) {
+                    try {
+                        this.accessToken = await this.login.getAppAccessToken(this.mainMobilePage, accountEmail)
+                    } catch (error) {
+                        this.logger.error(
+                            'main',
+                            'FLOW',
+                            `Failed to get mobile access token: ${error instanceof Error ? error.message : String(error)}`
+                        )
+                        this.accessToken = ''
+                    }
+>>>>>>> upstream/v4
                 }
 
                 await this.browser.func.checkpointActiveSession('LOGIN-CHECKPOINT')
@@ -646,6 +698,37 @@ export class MicrosoftRewardsBot {
                 }
 
                 const data: DashboardData = await this.browser.func.getDashboardData()
+                const hasBotScoreWarning =
+                    Array.isArray(data.dashboard.userWarnings) &&
+                    data.dashboard.userWarnings.some(warning => warning?.name === 'Fraud_UserWarning_BotScore_UX')
+
+                if (hasBotScoreWarning) {
+                    const availablePoints = data.dashboard.userStatus.availablePoints ?? 0
+
+                    if (!this.config.contintueOnBotWarning) {
+                        this.logger.warn(
+                            'main',
+                            'BOT-WARNING',
+                            `Microsoft Rewards reported Fraud_UserWarning_BotScore_UX for ${accountEmail}. ` +
+                                'This account will be skipped for safety. The preferred action is to stop automation for this account and wait a few days. ' +
+                                'To continue anyway (not recommended), set "contintueOnBotWarning": true.'
+                        )
+
+                        return {
+                            initialPoints: availablePoints,
+                            collectedPoints: 0,
+                            skippedForBotWarning: true
+                        }
+                    }
+
+                    this.logger.warn(
+                        'main',
+                        'BOT-WARNING',
+                        `Microsoft Rewards reported Fraud_UserWarning_BotScore_UX for ${accountEmail}, but contintueOnBotWarning=true. ` +
+                            'Continuing as configured is not recommended; waiting a few days is the preferred action.'
+                    )
+                }
+
                 const profileCountry = normalizeCountry(data.dashboard.userProfile.attributes.country)
 
                 if (account.geoLocale === 'auto') {
@@ -671,7 +754,7 @@ export class MicrosoftRewardsBot {
 
                 let appData: AppDashboardData | null = null
 
-                if (this.accessToken) {
+                if (this.accessToken && needsAppActivities) {
                     try {
                         appData = await this.browser.func.getAppDashboardData()
                     } catch (error) {
@@ -688,10 +771,10 @@ export class MicrosoftRewardsBot {
                 this.userData.currentPoints = data.dashboard.userStatus.availablePoints
                 const initialPoints = this.userData.initialPoints ?? 0
 
-                const browserEarnable = await this.browser.func.getBrowserEarnablePoints()
+                const browserEarnable = await this.browser.func.getBrowserEarnablePoints(data)
                 let appEarnable: AppEarnablePoints | null = null
 
-                if (this.accessToken) {
+                if (this.accessToken && needsAppActivities) {
                     try {
                         appEarnable = await this.browser.func.getAppEarnablePoints()
                     } catch (error) {
@@ -725,7 +808,7 @@ export class MicrosoftRewardsBot {
 
                 if (this.config.experimental.edgeBrowsing) {
                     edgeBrowsingTask = this.activities
-                        .doEdgeBrowsing(edgeBrowsingController.signal)
+                        .doEdgeBrowsing(data, edgeBrowsingController.signal)
                         .catch(error => {
                             this.logger.error(
                                 this.isMobile,
@@ -752,10 +835,15 @@ export class MicrosoftRewardsBot {
                     const doDesktopSearch = plan.doDesktop
                     const desktopBrowserNeeded = this.config.workers.doPunchCards || doVisualSearch
 
+                    if (doDesktopSearch && !desktopBrowserNeeded) {
+                        this.cookies.desktop = [...this.cookies.mobile]
+                        this.fingerprintDesktop = await this.browserFactory.generateFingerprint(false)
+                    }
+
                     if (desktopBrowserNeeded) {
                         await executionContext.run({ isMobile: false, account }, async () => {
                             desktopSession = await this.createDesktopSession(account)
-                            await this.activities.doPunchCardsDesktop()
+                            if (this.config.workers.doPunchCards) await this.activities.doPunchCardsDesktop()
                             if (doVisualSearch) await this.activities.doVisualSearch(data)
                         })
                         await closeDesktopSession()
@@ -791,10 +879,15 @@ export class MicrosoftRewardsBot {
                     const desktopBrowserNeeded =
                         this.config.workers.doPunchCards || doVisualSearch || (doDesktopSearch && !apiSearch)
 
+                    if (apiSearch && doDesktopSearch && !desktopBrowserNeeded) {
+                        this.cookies.desktop = [...this.cookies.mobile]
+                        this.fingerprintDesktop = await this.browserFactory.generateFingerprint(false)
+                    }
+
                     if (parallel && !apiSearch && doMobileSearch && doDesktopSearch) {
                         await executionContext.run({ isMobile: false, account }, async () => {
                             desktopSession = await this.createDesktopSession(account)
-                            await this.activities.doPunchCardsDesktop()
+                            if (this.config.workers.doPunchCards) await this.activities.doPunchCardsDesktop()
                             if (doVisualSearch) await this.activities.doVisualSearch(data)
                         })
 
@@ -828,7 +921,7 @@ export class MicrosoftRewardsBot {
                             await executionContext.run({ isMobile: false, account }, async () => {
                                 desktopSession = await this.createDesktopSession(account)
 
-                                await this.activities.doPunchCardsDesktop()
+                                if (this.config.workers.doPunchCards) await this.activities.doPunchCardsDesktop()
                                 if (doVisualSearch) await this.activities.doVisualSearch(data)
                                 if (doDesktopSearch && !apiSearch) {
                                     desktopPoints = await this.searchManager.searchDesktop(account)
@@ -964,6 +1057,8 @@ async function main(): Promise<void> {
         await rewardsBot.run()
     } catch (error) {
         rewardsBot.logger.error('main', 'MAIN-ERROR', error as Error)
+        await flushAllWebhooks()
+        process.exitCode = 1
     }
 }
 

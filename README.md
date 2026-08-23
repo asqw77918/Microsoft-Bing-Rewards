@@ -132,11 +132,17 @@ cd Microsoft-Rewards-Script
 
 ```env
 ACCOUNT_1_EMAIL=email@example.com
-ACCOUNT_1_PASSWORD=your_password
+# ACCOUNT_1_PASSWORD=your_password
 ```
 
 > [!NOTE]
+<<<<<<< HEAD
 > 每个账号添加一个 `ACCOUNT_N_*` 配置块。账号编号不需要连续：即使前面的编号缺失，也可以配置 `ACCOUNT_2` 或 `ACCOUNT_4`。账号按编号升序依次运行。可选的每账号字段包括恢复邮箱、区域设置、语言、代理和指纹持久化 - 详见 [`env.example`](env.example)。
+=======
+> `ACCOUNT_N_PASSWORD` is optional. Set it when password sign-in should be available; leave it unset for passwordless/Authenticator-only accounts.
+>
+> Add one `ACCOUNT_N_*` block per account. Account slots do not need to be contiguous: `ACCOUNT_2` or `ACCOUNT_4` can be configured even when earlier slots are missing. Accounts run in ascending slot order. Optional per-account fields cover recovery email, locale, language, proxy, and fingerprint persistence - see [`env.example`](env.example) for all of them.
+>>>>>>> upstream/v4
 
 `ACCOUNT_N_LANG_CODE` 接受 BCP 47 语言标签，例如 `nl`、`it` 或 `pt-BR`。`ACCOUNT_N_GEO_LOCALE` 接受两位国家代码，默认为 `auto`。所选语言和国家会一致地应用到浏览器指纹、`Accept-Language`、Microsoft Rewards 应用请求头和特定市场的请求中。在 `auto` 模式下，首次成功的仪表盘请求后会缓存 Microsoft 账号配置中报告的国家；更改任一区域设置会自动替换不兼容的已保存指纹。
 
@@ -181,9 +187,10 @@ npm run start
 
 ```env
 ACCOUNT_1_EMAIL=email@example.com
-ACCOUNT_1_PASSWORD=your_password
+# ACCOUNT_1_PASSWORD=your_password
 ```
 
+<<<<<<< HEAD
 如需配置多个账号，添加 `ACCOUNT_2_*`、`ACCOUNT_3_*` 等配置块。
 
 ### 3. 调整 compose.yaml
@@ -219,6 +226,11 @@ services:
 ```
 
 ### 4. 配置说明
+=======
+`ACCOUNT_N_PASSWORD` is optional; omit it for passwordless/Authenticator-only accounts.
+
+- Review `compose.yaml` to adjust scheduling, timezone, and config options.
+>>>>>>> upstream/v4
 
 > [!NOTE]
 > 首次运行时会使用默认值自动生成 `config.json`，并保存到 `./config/` 目录。
@@ -320,6 +332,7 @@ curl --request POST \
 
 ### 核心配置（Core）
 
+<<<<<<< HEAD
 | 设置项                      | 类型    | 默认值       | 说明                                               | Docker 环境变量                       |
 | --------------------------- | ------- | ------------ | -------------------------------------------------- | ------------------------------------- |
 | `sessionPath`               | string  | `"sessions"` | 存储浏览器会话的目录                               |                                       |
@@ -333,6 +346,22 @@ curl --request POST \
 | `accountDelay.max`          | string  | `"3min"`     | 启动下一个配置账号的最大延迟                       | `CONFIG_ACCOUNT_DELAY_MAX`            |
 | `searchOnBingLocalQueries`  | boolean | `false`      | 对 ExploreOnBing 使用本地搜索词列表                | `CONFIG_SEARCH_ON_BING_LOCAL`         |
 | `globalTimeout`             | string  | `"30sec"`    | 所有操作的超时时间                                 | `CONFIG_GLOBAL_TIMEOUT`               |
+=======
+| Setting                     | Type    | Default      | Description                                                        | Docker environment variable           |
+| --------------------------- | ------- | ------------ | ------------------------------------------------------------------ | ------------------------------------- |
+| `sessionPath`               | string  | `"sessions"` | Directory to store browser sessions                                |                                       |
+| `headless`                  | boolean | `false`      | Run browser invisibly                                              | Always `true` in Docker               |
+| `clusters`                  | number  | `1`          | Number of concurrent account clusters                              | `CONFIG_CLUSTERS`                     |
+| `errorDiagnostics`          | boolean | `false`      | Save error and unknown-login page diagnostics under `diagnostics/` | `CONFIG_ERROR_DIAGNOSTICS`            |
+| `ensureStreakProtection`    | boolean | `true`       | Ensure streak protection is enabled                                | `CONFIG_ENSURE_STREAK_PROTECTION`     |
+| `autoClaimPunchcardRewards` | boolean | `false`      | Auto-claim completed punchcard rewards                             | `CONFIG_AUTO_CLAIM_PUNCHCARD_REWARDS` |
+| `contintueOnBotWarning`     | boolean | `false`      | Continue despite the Microsoft bot-score warning (not recommended) | `CONFIG_CONTINTUE_ON_BOT_WARNING`     |
+| `skipNonPointTasks`         | boolean | `true`       | Skip tasks that award no points                                    | `CONFIG_SKIP_NON_POINT_TASKS`         |
+| `accountDelay.min`          | string  | `"1min"`     | Minimum delay before starting the next configured account          | `CONFIG_ACCOUNT_DELAY_MIN`            |
+| `accountDelay.max`          | string  | `"3min"`     | Maximum delay before starting the next configured account          | `CONFIG_ACCOUNT_DELAY_MAX`            |
+| `searchOnBingLocalQueries`  | boolean | `false`      | Use the local query list for ExploreOnBing                         | `CONFIG_SEARCH_ON_BING_LOCAL`         |
+| `globalTimeout`             | string  | `"30sec"`    | Timeout for all actions                                            | `CONFIG_GLOBAL_TIMEOUT`               |
+>>>>>>> upstream/v4
 
 ### 工作任务（Workers）
 
