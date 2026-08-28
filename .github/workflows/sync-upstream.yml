@@ -38,7 +38,7 @@ jobs:
       - name: Try GitHub merge-upstream API (clean fast path)
         id: api
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
         run: |
           set +e
           output=$(gh api repos/${{ github.repository }}/merge-upstream -f branch=${{ env.BASE_BRANCH }} 2>&1)
@@ -86,7 +86,7 @@ jobs:
       - name: Create Pull Request for review
         if: steps.api.outputs.result == 'conflict'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
         run: |
           gh pr create \
             --title "chore: sync upstream $(date +%Y-%m-%d)" \
