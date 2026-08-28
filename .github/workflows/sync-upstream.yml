@@ -82,15 +82,35 @@ jobs:
           git push -f origin "$SYNC_BRANCH"
           echo "SYNC_BRANCH=$SYNC_BRANCH" >> "$GITHUB_ENV"
 
-      # ---------- 第三步：冲突合并结果开 PR，人工复核后再合入 ----------
-      - name: Create Pull Request for review
+      # ---------- 第三步：同步分支可快进时，自动合并到主分支并推送（触发 release） ----------
+      - name: Auto merge to base when fast-forward possible
+        id: ffauto
         if: steps.api.outputs.result == 'conflict'
+        run: |
+          git fetch origin
+          set +e
+          git merge-base --is-ancestor "origin/${{ env.BASE_BRANCH }}" "$SYNC_BRANCH"
+          CAN_FF=$?
+          set -e
+          if [ "$CAN_FF" -eq 0 ]; then
+            echo "LOG: Sync branch is a descendant of ${{ env.BASE_BRANCH }}, auto fast-forward merging."
+            git checkout -B "${{ env.BASE_BRANCH }}" "$SYNC_BRANCH"
+            git push origin "${{ env.BASE_BRANCH }}"
+            echo "result=auto-merged" >> "$GITHUB_OUTPUT"
+          else
+            echo "LOG: Base branch has diverged from sync branch, requires review."
+            echo "result=needs-review" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ---------- 第四步：主分支已分歧、无法自动合并时，开 PR 人工复核 ----------
+      - name: Create Pull Request for review
+        if: steps.api.outputs.result == 'conflict' && steps.ffauto.outputs.result == 'needs-review'
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT }}
         run: |
           gh pr create \
             --title "chore: sync upstream $(date +%Y-%m-%d)" \
-            --body "自动同步上游仓库更新。冲突部分已按【保留本仓库自定义修改】策略（ours）自动解决，请人工复核后合并。" \
+            --body "自动同步上游仓库更新。主分支已与同步分支分歧，冲突部分已按【保留本仓库自定义修改】策略（ours）自动解决，请人工复核后合并。" \
             --head "$SYNC_BRANCH" \
             --base "${{ env.BASE_BRANCH }}" \
           || echo "PR 可能已存在，跳过创建"
