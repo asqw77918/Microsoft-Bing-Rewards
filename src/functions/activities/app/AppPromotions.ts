@@ -13,11 +13,7 @@ export class AppPromotions extends BaseActivity {
         })
 
         if (!pending.length) {
-            this.bot.logger.info(
-                this.bot.isMobile,
-                'APP-PROMOTIONS',
-                '所有 "App Promotions" 项目均已完成'
-            )
+            this.bot.logger.info(this.bot.isMobile, 'APP-PROMOTIONS', '所有 "App Promotions" 项目均已完成')
             return
         }
 

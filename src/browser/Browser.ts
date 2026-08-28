@@ -111,11 +111,7 @@ class Browser {
                     `正在恢复已保存的浏览器会话 | cookies=${session.storageState.cookies.length} | origins=${session.storageState.origins.length} | ageMinutes=${ageMinutes}`
                 )
             } else {
-                this.bot.logger.info(
-                    this.bot.isMobile,
-                    'SESSION',
-                    '未找到已保存的浏览器会话；可能需要登录'
-                )
+                this.bot.logger.info(this.bot.isMobile, 'SESSION', '未找到已保存的浏览器会话；可能需要登录')
             }
 
             const shouldUseFingerprint = this.bot.isMobile
@@ -174,9 +170,7 @@ class Browser {
             await configureMediaBlocking(this.bot, context)
 
             context.on('page', p => {
-                p.on('crash', () =>
-                    this.bot.logger.error(this.bot.isMobile, 'BROWSER', `渲染进程崩溃 | ${p.url()}`)
-                )
+                p.on('crash', () => this.bot.logger.error(this.bot.isMobile, 'BROWSER', `渲染进程崩溃 | ${p.url()}`))
             })
             context.on('close', () => this.bot.logger.warn(this.bot.isMobile, 'BROWSER', '浏览器上下文已关闭'))
 

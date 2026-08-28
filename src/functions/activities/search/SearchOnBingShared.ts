@@ -15,22 +15,14 @@ export async function activateSearchOnBing(bot: MicrosoftRewardsBot, promotion: 
     const actionId = bot.nextActions.reportActivity
 
     if (!actionId) {
-        bot.logger.warn(
-            bot.isMobile,
-            'SEARCH-ON-BING-ACTIVATE',
-            `跳过 ${offerId}：未在 bundle 中发现 "reportActivity"`
-        )
+        bot.logger.warn(bot.isMobile, 'SEARCH-ON-BING-ACTIVATE', `跳过 ${offerId}：未在 bundle 中发现 "reportActivity"`)
         return false
     }
 
     const live = await bot.browser.func.ensureOffer(offerId)
     const hash = live?.hash ?? promotion.hash ?? null
     if (!hash) {
-        bot.logger.warn(
-            bot.isMobile,
-            'SEARCH-ON-BING-ACTIVATE',
-            `跳过 ${offerId}：激活活动没有有效的 hash`
-        )
+        bot.logger.warn(bot.isMobile, 'SEARCH-ON-BING-ACTIVATE', `跳过 ${offerId}：激活活动没有有效的 hash`)
         return false
     }
 

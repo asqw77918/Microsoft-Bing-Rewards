@@ -13,11 +13,7 @@ export class DailySet extends BaseActivity {
             return
         }
 
-        this.bot.logger.info(
-            this.bot.isMobile,
-            'DAILY-SET',
-            `开始处理 "Daily Set" 项目 | remaining=${pending.length}`
-        )
+        this.bot.logger.info(this.bot.isMobile, 'DAILY-SET', `开始处理 "Daily Set" 项目 | remaining=${pending.length}`)
         await new PromotionActivityRunner(this.bot).run(pending)
         this.bot.logger.info(this.bot.isMobile, 'DAILY-SET', '"Daily Set" 项目处理完成')
     }

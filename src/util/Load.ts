@@ -144,9 +144,7 @@ export function loadAccounts(): Account[] {
         }
 
         if (!accounts.length) {
-            throw new Error(
-                '环境中未找到账号。请至少设置一个 ACCOUNT_N_EMAIL（参见 env.example）。'
-            )
+            throw new Error('环境中未找到账号。请至少设置一个 ACCOUNT_N_EMAIL（参见 env.example）。')
         }
 
         return validateAccounts(accounts)
@@ -165,9 +163,7 @@ export function loadConfig(): Config {
         // Check root -> dist -> src (not in dist, but root)
         const configPath = resolveProjectFile('config.json')
         if (!configPath) {
-            throw new Error(
-                '未找到 config.json - 请将其放在项目根目录（dist/ 和 src/ 也会作为回退搜索路径）'
-            )
+            throw new Error('未找到 config.json - 请将其放在项目根目录（dist/ 和 src/ 也会作为回退搜索路径）')
         }
         const config = fs.readFileSync(configPath, 'utf-8')
 
