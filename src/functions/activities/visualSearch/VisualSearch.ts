@@ -53,11 +53,7 @@ export class VisualSearch extends BaseActivity {
 
         const available = streak?.isEnabled === true || activation === 'activated' || activation === 'already-active'
         if (!available) {
-            this.bot.logger.info(
-                this.bot.isMobile,
-                'VISUAL-SEARCH',
-                '此账号无法使用视觉搜索，正在跳过'
-            )
+            this.bot.logger.info(this.bot.isMobile, 'VISUAL-SEARCH', '此账号无法使用视觉搜索，正在跳过')
             return 0
         }
 
@@ -79,11 +75,7 @@ export class VisualSearch extends BaseActivity {
 
     private logStreakState(streak: StreakState | undefined): void {
         if (!streak) {
-            this.bot.logger.info(
-                this.bot.isMobile,
-                'VISUAL-SEARCH',
-                '快照中没有视觉搜索 streak - 回退到激活活动'
-            )
+            this.bot.logger.info(this.bot.isMobile, 'VISUAL-SEARCH', '快照中没有视觉搜索 streak - 回退到激活活动')
             return
         }
 
@@ -94,11 +86,7 @@ export class VisualSearch extends BaseActivity {
         )
 
         if (!streak.isEnabled) {
-            this.bot.logger.warn(
-                this.bot.isMobile,
-                'VISUAL-SEARCH',
-                'Streak 存在但未启用 - 在启用之前搜索不会被记录'
-            )
+            this.bot.logger.warn(this.bot.isMobile, 'VISUAL-SEARCH', 'Streak 存在但未启用 - 在启用之前搜索不会被记录')
         }
     }
 
@@ -133,11 +121,7 @@ export class VisualSearch extends BaseActivity {
         }
 
         if (!offer.reportable && !offer.isLocked) {
-            this.bot.logger.warn(
-                this.bot.isMobile,
-                'VISUAL-SEARCH',
-                `激活活动不可执行 | offerId=${offer.offerId}`
-            )
+            this.bot.logger.warn(this.bot.isMobile, 'VISUAL-SEARCH', `激活活动不可执行 | offerId=${offer.offerId}`)
             return 'failed'
         }
 
@@ -461,11 +445,7 @@ export class VisualSearch extends BaseActivity {
             await this.bot.utils.wait(this.bot.utils.randomDelay(3000, 6000))
         }
 
-        this.bot.logger.warn(
-            this.bot.isMobile,
-            'VISUAL-SEARCH',
-            `经过 ${MAX_ATTEMPTS} 次尝试后，今日视觉搜索仍未入账`
-        )
+        this.bot.logger.warn(this.bot.isMobile, 'VISUAL-SEARCH', `经过 ${MAX_ATTEMPTS} 次尝试后，今日视觉搜索仍未入账`)
         return 0
     }
 

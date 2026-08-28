@@ -49,11 +49,7 @@ export class ActivateSearchPerk extends BaseActivity {
     public async activate(data: DashboardData) {
         const perk = detectSearchMultiplierPerk(data.dashboard)
         if (!perk) {
-            this.bot.logger.debug(
-                this.bot.isMobile,
-                'ACTIVATE-SEARCH-PERK',
-                '仪表盘上不存在搜索倍数特权'
-            )
+            this.bot.logger.debug(this.bot.isMobile, 'ACTIVATE-SEARCH-PERK', '仪表盘上不存在搜索倍数特权')
             return
         }
 

@@ -43,9 +43,7 @@ function buildSummary(entries: PushPlusLogEntry[]): string {
     const lines: string[] = []
     lines.push('======== 运行总结汇报 ========')
     lines.push(`生成时间: ${now}`)
-    lines.push(
-        `日志总数: ${entries.length} 条 | 错误 ${errors.length} | 警告 ${warns.length} | 信息 ${infos.length}`
-    )
+    lines.push(`日志总数: ${entries.length} 条 | 错误 ${errors.length} | 警告 ${warns.length} | 信息 ${infos.length}`)
     lines.push('')
 
     const pushSection = (title: string, list: PushPlusLogEntry[]): void => {

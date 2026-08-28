@@ -467,11 +467,7 @@ export default class BrowserFunc {
                 if (isBrowserClosedError(error)) {
                     this.bot.logger.debug(this.bot.isMobile, 'CLOSE-BROWSER', '浏览器已经关闭。')
                 } else {
-                    this.bot.logger.warn(
-                        this.bot.isMobile,
-                        'CLOSE-BROWSER',
-                        '关闭时遇到错误，但进程正在退出。'
-                    )
+                    this.bot.logger.warn(this.bot.isMobile, 'CLOSE-BROWSER', '关闭时遇到错误，但进程正在退出。')
                 }
             }
         }
@@ -496,11 +492,7 @@ export default class BrowserFunc {
                 return await response.text()
             }
 
-            this.bot.logger.debug(
-                this.bot.isMobile,
-                'REWARDS-PAGE',
-                `获取 ${route} 失败 | status=${response.status()}`
-            )
+            this.bot.logger.debug(this.bot.isMobile, 'REWARDS-PAGE', `获取 ${route} 失败 | status=${response.status()}`)
         } catch (error) {
             this.bot.logger.debug(
                 this.bot.isMobile,
@@ -520,11 +512,7 @@ export default class BrowserFunc {
     async checkpointActiveSession(source = 'SESSION-CHECKPOINT'): Promise<boolean> {
         const page = this.getActivePage()
         if (!page) {
-            this.bot.logger.debug(
-                this.bot.isMobile,
-                source,
-                '无法检查点会话，因为没有可用的活动浏览器页面'
-            )
+            this.bot.logger.debug(this.bot.isMobile, source, '无法检查点会话，因为没有可用的活动浏览器页面')
             return false
         }
 

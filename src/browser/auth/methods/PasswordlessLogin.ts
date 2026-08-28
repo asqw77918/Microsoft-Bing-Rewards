@@ -133,12 +133,7 @@ export class PasswordlessLogin {
             return
         }
 
-        this.bot.logger.info(
-            this.bot.isMobile,
-            'LOGIN-PASSWORDLESS',
-            '请在您的验证器应用上批准登录',
-            'yellowBright'
-        )
+        this.bot.logger.info(this.bot.isMobile, 'LOGIN-PASSWORDLESS', '请在您的验证器应用上批准登录', 'yellowBright')
     }
 
     async handle(page: Page): Promise<void> {

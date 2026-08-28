@@ -398,9 +398,7 @@ export function validateAccounts(data: unknown): Account[] {
             if (issue.input === undefined) {
                 console.error(`[账号] "${path}" 缺失 (期望 ${issue.expected})`)
             } else {
-                console.error(
-                    `[账号] "${path}" 类型错误: 期望 ${issue.expected}，实际得到 ${typeof issue.input}`
-                )
+                console.error(`[账号] "${path}" 类型错误: 期望 ${issue.expected}，实际得到 ${typeof issue.input}`)
             }
         } else if (issue.code === 'invalid_union') {
             console.error(`[账号] "${path}" 不匹配任何允许的类型: ${issue.message}`)

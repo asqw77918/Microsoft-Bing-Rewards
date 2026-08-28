@@ -129,11 +129,7 @@ export class QueryCore {
 
             if (shuffle) {
                 this.bot.utils.shuffleArray(topics)
-                this.bot.logger.debug(
-                    this.bot.isMobile,
-                    'QUERY-MANAGER',
-                    `已打乱主主题池 | first="${topics[0] ?? ''}"`
-                )
+                this.bot.logger.debug(this.bot.isMobile, 'QUERY-MANAGER', `已打乱主主题池 | first="${topics[0] ?? ''}"`)
             }
 
             this.bot.logger.debug(

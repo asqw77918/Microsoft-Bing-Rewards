@@ -203,10 +203,10 @@ services:
             - path: .env
         environment:
             # ── 调度器 ──────────────────────────────────────
-            TZ: 'America/Toronto'           # 时区，中国用户可设为 'Asia/Shanghai'
+            TZ: 'America/Toronto' # 时区，中国用户可设为 'Asia/Shanghai'
             NODE_ENV: 'production'
-            CRON_SCHEDULE: '0 7 * * *'      # 定时计划，使用 crontab.guru 自定义
-            RUN_ON_START: 'true'            # 容器启动时立即运行一次
+            CRON_SCHEDULE: '0 7 * * *' # 定时计划，使用 crontab.guru 自定义
+            RUN_ON_START: 'true' # 容器启动时立即运行一次
             SKIP_RANDOM_SLEEP: 'false'
         healthcheck:
             test: ['CMD-SHELL', 'scripts/docker/healthcheck.sh']
@@ -312,60 +312,60 @@ curl --request POST \
 
 ### 核心配置（Core）
 
-| 设置项                      | 类型    | 默认值       | 说明                                               | Docker 环境变量                       |
-| --------------------------- | ------- | ------------ | -------------------------------------------------- | ------------------------------------- |
-| `sessionPath`               | string  | `"sessions"` | 存储浏览器会话的目录                               |                                       |
-| `headless`                  | boolean | `false`      | 无头模式运行浏览器（不可见）                       | Docker 中始终为 `true`                |
-| `clusters`                  | number  | `1`          | 并发账号集群数                                     | `CONFIG_CLUSTERS`                     |
+| 设置项                      | 类型    | 默认值       | 说明                                                | Docker 环境变量                       |
+| --------------------------- | ------- | ------------ | --------------------------------------------------- | ------------------------------------- |
+| `sessionPath`               | string  | `"sessions"` | 存储浏览器会话的目录                                |                                       |
+| `headless`                  | boolean | `false`      | 无头模式运行浏览器（不可见）                        | Docker 中始终为 `true`                |
+| `clusters`                  | number  | `1`          | 并发账号集群数                                      | `CONFIG_CLUSTERS`                     |
 | `errorDiagnostics`          | boolean | `false`      | 将错误和未知登录页面的诊断信息保存到 `diagnostics/` | `CONFIG_ERROR_DIAGNOSTICS`            |
-| `ensureStreakProtection`    | boolean | `true`       | 确保已启用连续打卡保护                             | `CONFIG_ENSURE_STREAK_PROTECTION`     |
-| `autoClaimPunchcardRewards` | boolean | `false`      | 自动领取已完成的打卡奖励                           | `CONFIG_AUTO_CLAIM_PUNCHCARD_REWARDS` |
-| `skipNonPointTasks`         | boolean | `true`       | 跳过不奖励积分的任务                               | `CONFIG_SKIP_NON_POINT_TASKS`         |
-| `accountDelay.min`          | string  | `"1min"`     | 启动下一个配置账号的最小延迟                       | `CONFIG_ACCOUNT_DELAY_MIN`            |
-| `accountDelay.max`          | string  | `"3min"`     | 启动下一个配置账号的最大延迟                       | `CONFIG_ACCOUNT_DELAY_MAX`            |
-| `searchOnBingLocalQueries`  | boolean | `false`      | 对 ExploreOnBing 使用本地搜索词列表                | `CONFIG_SEARCH_ON_BING_LOCAL`         |
-| `globalTimeout`             | string  | `"30sec"`    | 所有操作的超时时间                                 | `CONFIG_GLOBAL_TIMEOUT`               |
+| `ensureStreakProtection`    | boolean | `true`       | 确保已启用连续打卡保护                              | `CONFIG_ENSURE_STREAK_PROTECTION`     |
+| `autoClaimPunchcardRewards` | boolean | `false`      | 自动领取已完成的打卡奖励                            | `CONFIG_AUTO_CLAIM_PUNCHCARD_REWARDS` |
+| `skipNonPointTasks`         | boolean | `true`       | 跳过不奖励积分的任务                                | `CONFIG_SKIP_NON_POINT_TASKS`         |
+| `accountDelay.min`          | string  | `"1min"`     | 启动下一个配置账号的最小延迟                        | `CONFIG_ACCOUNT_DELAY_MIN`            |
+| `accountDelay.max`          | string  | `"3min"`     | 启动下一个配置账号的最大延迟                        | `CONFIG_ACCOUNT_DELAY_MAX`            |
+| `searchOnBingLocalQueries`  | boolean | `false`      | 对 ExploreOnBing 使用本地搜索词列表                 | `CONFIG_SEARCH_ON_BING_LOCAL`         |
+| `globalTimeout`             | string  | `"30sec"`    | 所有操作的超时时间                                  | `CONFIG_GLOBAL_TIMEOUT`               |
 
 ### 工作任务（Workers）
 
-| 设置项                        | 类型    | 默认值  | 说明                                       | Docker 环境变量                      |
-| ----------------------------- | ------- | ------- | ------------------------------------------ | ------------------------------------ |
-| `workers.doDailySet`          | boolean | `true`  | 完成每日任务集                             | `CONFIG_WORKER_DAILY_SET`            |
-| `workers.doClaimBonusPoints`  | boolean | `true`  | 领取奖励积分                               | `CONFIG_WORKER_CLAIM_BONUS_POINTS`   |
-| `workers.doMorePromotions`    | boolean | `true`  | 完成"更多活动"                             | `CONFIG_WORKER_MORE_PROMOTIONS`      |
-| `workers.doPunchCards`        | boolean | `true`  | 完成打卡任务                               | `CONFIG_WORKER_PUNCH_CARDS`          |
-| `workers.doAppPromotions`     | boolean | `true`  | 完成应用推广活动                           | `CONFIG_WORKER_APP_PROMOTIONS`       |
-| `workers.doDesktopSearch`     | boolean | `true`  | 执行桌面端搜索                             | `CONFIG_WORKER_DESKTOP_SEARCH`       |
-| `workers.doMobileSearch`      | boolean | `true`  | 执行移动端搜索                             | `CONFIG_WORKER_MOBILE_SEARCH`        |
-| `workers.doBonusSearches`     | boolean | `false` | 超出上限后继续刷额外搜索                   | `CONFIG_WORKER_BONUS_SEARCHES`       |
-| `workers.doDailyCheckIn`      | boolean | `true`  | 完成每日签到                               | `CONFIG_WORKER_DAILY_CHECKIN`        |
-| `workers.doReadToEarn`        | boolean | `true`  | 完成"阅读赚取"                             | `CONFIG_WORKER_READ_TO_EARN`         |
+| 设置项                         | 类型    | 默认值  | 说明                                              | Docker 环境变量                      |
+| ------------------------------ | ------- | ------- | ------------------------------------------------- | ------------------------------------ |
+| `workers.doDailySet`           | boolean | `true`  | 完成每日任务集                                    | `CONFIG_WORKER_DAILY_SET`            |
+| `workers.doClaimBonusPoints`   | boolean | `true`  | 领取奖励积分                                      | `CONFIG_WORKER_CLAIM_BONUS_POINTS`   |
+| `workers.doMorePromotions`     | boolean | `true`  | 完成"更多活动"                                    | `CONFIG_WORKER_MORE_PROMOTIONS`      |
+| `workers.doPunchCards`         | boolean | `true`  | 完成打卡任务                                      | `CONFIG_WORKER_PUNCH_CARDS`          |
+| `workers.doAppPromotions`      | boolean | `true`  | 完成应用推广活动                                  | `CONFIG_WORKER_APP_PROMOTIONS`       |
+| `workers.doDesktopSearch`      | boolean | `true`  | 执行桌面端搜索                                    | `CONFIG_WORKER_DESKTOP_SEARCH`       |
+| `workers.doMobileSearch`       | boolean | `true`  | 执行移动端搜索                                    | `CONFIG_WORKER_MOBILE_SEARCH`        |
+| `workers.doBonusSearches`      | boolean | `false` | 超出上限后继续刷额外搜索                          | `CONFIG_WORKER_BONUS_SEARCHES`       |
+| `workers.doDailyCheckIn`       | boolean | `true`  | 完成每日签到                                      | `CONFIG_WORKER_DAILY_CHECKIN`        |
+| `workers.doReadToEarn`         | boolean | `true`  | 完成"阅读赚取"                                    | `CONFIG_WORKER_READ_TO_EARN`         |
 | `workers.doActivateSearchPerk` | boolean | `true`  | 出现时激活"再搜索 N 次"特权（在每日任务集后运行） | `CONFIG_WORKER_ACTIVATE_SEARCH_PERK` |
-| `workers.doVisualSearch`      | boolean | `false` | 激视觉搜索连续打卡并执行视觉搜索           | `CONFIG_WORKER_VISUAL_SEARCH`        |
+| `workers.doVisualSearch`       | boolean | `false` | 激视觉搜索连续打卡并执行视觉搜索                  | `CONFIG_WORKER_VISUAL_SEARCH`        |
 
 ### 活动（Activities）
 
-| 设置项                   | 类型    | 默认值 | 说明                  | Docker 环境变量                   |
-| ------------------------ | ------- | ------ | --------------------- | --------------------------------- |
-| `activities.urlReward`   | boolean | `true` | 完成 URL 奖励活动     | `CONFIG_ACTIVITY_URL_REWARD`      |
+| 设置项                    | 类型    | 默认值 | 说明                    | Docker 环境变量                  |
+| ------------------------- | ------- | ------ | ----------------------- | -------------------------------- |
+| `activities.urlReward`    | boolean | `true` | 完成 URL 奖励活动       | `CONFIG_ACTIVITY_URL_REWARD`     |
 | `activities.searchOnBing` | boolean | `true` | 完成 ExploreOnBing 活动 | `CONFIG_ACTIVITY_SEARCH_ON_BING` |
 
 ### 搜索设置（Search Settings）
 
-| 设置项                                 | 类型     | 默认值                                  | 说明                                            | Docker 环境变量                     |
-| -------------------------------------- | -------- | --------------------------------------- | ----------------------------------------------- | ----------------------------------- |
-| `searchSettings.scrollRandomResults`   | boolean  | `false`                                 | 随机滚动搜索结果                                | `CONFIG_SEARCH_SCROLL_RANDOM`       |
-| `searchSettings.clickRandomResults`    | boolean  | `false`                                 | 随机点击搜索结果链接                            | `CONFIG_SEARCH_CLICK_RANDOM`        |
-| `searchSettings.runOnZeroPoints`       | boolean  | `false`                                 | 即使没有剩余搜索积分也执行搜索                  | `CONFIG_SEARCH_RUN_ON_ZERO_POINTS`  |
-| `searchSettings.maxBonusSearches`      | number   | `110`                                   | 每次运行的最大额外搜索数（`doBonusSearches` 开启时） | `CONFIG_SEARCH_MAX_BONUS_SEARCHES`  |
-| `searchSettings.parallelSearching`     | boolean  | `true`                                  | 并行执行搜索                                    | `CONFIG_SEARCH_PARALLEL`            |
-| `searchSettings.clusterSearch`         | boolean  | `true`                                  | 每个主话题与 Bing 建议组成集群                   | `CONFIG_SEARCH_CLUSTER`             |
-| `searchSettings.queryEngines`          | string[] | 见 [搜索词来源](#搜索词来源)            | 用于构建搜索词池的来源                          | `CONFIG_SEARCH_QUERY_ENGINES` \*    |
-| `searchSettings.searchResultVisitTime` | string   | `"10sec"`                               | 每个搜索结果的停留时间                          | `CONFIG_SEARCH_VISIT_TIME`          |
-| `searchSettings.searchDelay.min`       | string   | `"30sec"`                               | 搜索之间的最小延迟                              | `CONFIG_SEARCH_DELAY_MIN`           |
-| `searchSettings.searchDelay.max`       | string   | `"1min"`                                | 搜索之间的最大延迟                              | `CONFIG_SEARCH_DELAY_MAX`           |
-| `searchSettings.readDelay.min`         | string   | `"30sec"`                               | 阅读的最小延迟                                  | `CONFIG_SEARCH_READ_DELAY_MIN`      |
-| `searchSettings.readDelay.max`         | string   | `"1min"`                                | 阅读的最大延迟                                  | `CONFIG_SEARCH_READ_DELAY_MAX`      |
+| 设置项                                 | 类型     | 默认值                       | 说明                                                 | Docker 环境变量                    |
+| -------------------------------------- | -------- | ---------------------------- | ---------------------------------------------------- | ---------------------------------- |
+| `searchSettings.scrollRandomResults`   | boolean  | `false`                      | 随机滚动搜索结果                                     | `CONFIG_SEARCH_SCROLL_RANDOM`      |
+| `searchSettings.clickRandomResults`    | boolean  | `false`                      | 随机点击搜索结果链接                                 | `CONFIG_SEARCH_CLICK_RANDOM`       |
+| `searchSettings.runOnZeroPoints`       | boolean  | `false`                      | 即使没有剩余搜索积分也执行搜索                       | `CONFIG_SEARCH_RUN_ON_ZERO_POINTS` |
+| `searchSettings.maxBonusSearches`      | number   | `110`                        | 每次运行的最大额外搜索数（`doBonusSearches` 开启时） | `CONFIG_SEARCH_MAX_BONUS_SEARCHES` |
+| `searchSettings.parallelSearching`     | boolean  | `true`                       | 并行执行搜索                                         | `CONFIG_SEARCH_PARALLEL`           |
+| `searchSettings.clusterSearch`         | boolean  | `true`                       | 每个主话题与 Bing 建议组成集群                       | `CONFIG_SEARCH_CLUSTER`            |
+| `searchSettings.queryEngines`          | string[] | 见 [搜索词来源](#搜索词来源) | 用于构建搜索词池的来源                               | `CONFIG_SEARCH_QUERY_ENGINES` \*   |
+| `searchSettings.searchResultVisitTime` | string   | `"10sec"`                    | 每个搜索结果的停留时间                               | `CONFIG_SEARCH_VISIT_TIME`         |
+| `searchSettings.searchDelay.min`       | string   | `"30sec"`                    | 搜索之间的最小延迟                                   | `CONFIG_SEARCH_DELAY_MIN`          |
+| `searchSettings.searchDelay.max`       | string   | `"1min"`                     | 搜索之间的最大延迟                                   | `CONFIG_SEARCH_DELAY_MAX`          |
+| `searchSettings.readDelay.min`         | string   | `"30sec"`                    | 阅读的最小延迟                                       | `CONFIG_SEARCH_READ_DELAY_MIN`     |
+| `searchSettings.readDelay.max`         | string   | `"1min"`                     | 阅读的最大延迟                                       | `CONFIG_SEARCH_READ_DELAY_MAX`     |
 
 桌面端和移动端搜索配额独立于仪表盘计数器进行跟踪。所有 `mobileSearch` 条目合并用于移动端配额，所有 `pcSearch` 条目合并用于桌面端执行；明确标识为 Edge 的计数器也会单独显示用于诊断。脚本仅跳过已完成的平台，因此已完成的 `60/60` 移动端配额不会阻止未完成的桌面端配额运行。启用 `parallelSearching` 后，两个未完成的配额可以在各自的浏览器上下文中并发运行。
 
@@ -378,26 +378,26 @@ curl --request POST \
 
 核心来源：
 
-| 选择器      | 来源                                |
-| ----------- | ----------------------------------- |
-| `google`    | Google Trends（热搜）               |
-| `wikipedia` | Wikipedia 最热门文章（前一天）      |
-| `wikirandom` | 随机 Wikipedia 文章                 |
-| `hackernews` | Hacker News 首页文章               |
-| `reddit`    | Reddit r/popular 帖子标题           |
-| `local`     | 内置的 `src/functions/search-queries.json` 列表 |
+| 选择器       | 来源                                            |
+| ------------ | ----------------------------------------------- |
+| `google`     | Google Trends（热搜）                           |
+| `wikipedia`  | Wikipedia 最热门文章（前一天）                  |
+| `wikirandom` | 随机 Wikipedia 文章                             |
+| `hackernews` | Hacker News 首页文章                            |
+| `reddit`     | Reddit r/popular 帖子标题                       |
+| `local`      | 内置的 `src/functions/search-queries.json` 列表 |
 
 RSS 订阅使用点分路径 - `rss` 表示所有订阅，`rss.<站点>` 表示整个站点，`rss.<站点>.<端点>` 表示单个订阅：
 
-| 选择器              | 订阅源                                                      |
-| ------------------- | ----------------------------------------------------------- |
-| `rss.googleTrends`  | Google Trends RSS（`gb`、`us`）                             |
-| `rss.googleNews`    | Google News（`gb`、`us`、`world`、`technology`、`business`）|
-| `rss.bbc`           | BBC News（`top`、`world`、`technology`、`business`、`science`）|
-| `rss.guardian`      | The Guardian（`international`、`world`、`technology`）      |
-| `rss.theVerge`      | The Verge（`all`）                                          |
-| `rss.arsTechnica`   | Ars Technica（`all`）                                       |
-| `rss.reddit`        | Reddit 订阅源（`popular`、`worldnews`、`technology`）       |
+| 选择器             | 订阅源                                                          |
+| ------------------ | --------------------------------------------------------------- |
+| `rss.googleTrends` | Google Trends RSS（`gb`、`us`）                                 |
+| `rss.googleNews`   | Google News（`gb`、`us`、`world`、`technology`、`business`）    |
+| `rss.bbc`          | BBC News（`top`、`world`、`technology`、`business`、`science`） |
+| `rss.guardian`     | The Guardian（`international`、`world`、`technology`）          |
+| `rss.theVerge`     | The Verge（`all`）                                              |
+| `rss.arsTechnica`  | Ars Technica（`all`）                                           |
+| `rss.reddit`       | Reddit 订阅源（`popular`、`worldnews`、`technology`）           |
 
 可在 `src/constants/rssFeeds.ts` 中添加你自己的订阅源。
 
@@ -426,12 +426,12 @@ RSS 订阅使用点分路径 - `rss` 表示所有订阅，`rss.<站点>` 表示�
 
 可选功能，可能会发生变化。默认禁用。
 
-| 设置项                         | 类型    | 默认值  | 说明                                                | Docker 环境变量                          |
-| ------------------------------ | ------- | ------- | --------------------------------------------------- | ---------------------------------------- |
-| `experimental.apiSearch`       | boolean | `false` | 通过 HTTP 而非驱动浏览器页面执行 Bing 搜索          | `CONFIG_EXPERIMENTAL_API_SEARCH`         |
-| `experimental.apiSearchOnBing` | boolean | `false` | 通过 HTTP 而非浏览器完成 ExploreOnBing 活动         | `CONFIG_EXPERIMENTAL_API_SEARCH_ON_BING` |
-| `experimental.blockMedia`      | boolean | `false` | 阻止浏览器的 `image` 和 `media` 请求以减少流量      | `CONFIG_EXPERIMENTAL_BLOCK_MEDIA`        |
-| `experimental.edgeBrowsing`    | boolean | `false` | 作为后台 HTTP 任务上报 30 分钟 Edge 浏览活动        | `CONFIG_EXPERIMENTAL_EDGE_BROWSING`      |
+| 设置项                         | 类型    | 默认值  | 说明                                           | Docker 环境变量                          |
+| ------------------------------ | ------- | ------- | ---------------------------------------------- | ---------------------------------------- |
+| `experimental.apiSearch`       | boolean | `false` | 通过 HTTP 而非驱动浏览器页面执行 Bing 搜索     | `CONFIG_EXPERIMENTAL_API_SEARCH`         |
+| `experimental.apiSearchOnBing` | boolean | `false` | 通过 HTTP 而非浏览器完成 ExploreOnBing 活动    | `CONFIG_EXPERIMENTAL_API_SEARCH_ON_BING` |
+| `experimental.blockMedia`      | boolean | `false` | 阻止浏览器的 `image` 和 `media` 请求以减少流量 | `CONFIG_EXPERIMENTAL_BLOCK_MEDIA`        |
+| `experimental.edgeBrowsing`    | boolean | `false` | 作为后台 HTTP 任务上报 30 分钟 Edge 浏览活动   | `CONFIG_EXPERIMENTAL_EDGE_BROWSING`      |
 
 当 `experimental.blockMedia` 启用时，文档、样式表、脚本、字体、XHR 和 fetch 请求不受影响。这保持了登录和 Rewards 应用流量可用，同时避免了图片、视频和音频下载。该设置也适用于 `npm run open-session`。
 
@@ -473,24 +473,24 @@ RSS 订阅使用点分路径 - `rss` 表示所有订阅，`rss.<站点>` 表示�
 
 ### 日志（Logging）
 
-| 设置项                          | 类型     | 默认值                            | 说明                        | Docker 环境变量                  |
-| ------------------------------- | -------- | --------------------------------- | --------------------------- | -------------------------------- |
-| `debugLogs`                     | boolean  | `false`                           | 启用调试日志                | `CONFIG_DEBUG_LOGS`              |
-| `consoleLogFilter.enabled`      | boolean  | `false`                           | 启用控制台日志过滤          | `CONFIG_LOG_FILTER_ENABLED`      |
-| `consoleLogFilter.mode`         | string   | `"whitelist"`                     | 过滤模式（白名单/黑名单）   | `CONFIG_LOG_FILTER_MODE`         |
-| `consoleLogFilter.levels`       | string[] | `["error", "warn"]`               | 要过滤的日志级别            | `CONFIG_LOG_FILTER_LEVELS` \*    |
-| `consoleLogFilter.keywords`     | string[] | `["starting account"]`            | 要过滤的关键词              | `CONFIG_LOG_FILTER_KEYWORDS` \*  |
-| `consoleLogFilter.regexPatterns` | string[] | `[]`                              | 用于过滤的正则表达式模式    |                                  |
+| 设置项                           | 类型     | 默认值                 | 说明                      | Docker 环境变量                 |
+| -------------------------------- | -------- | ---------------------- | ------------------------- | ------------------------------- |
+| `debugLogs`                      | boolean  | `false`                | 启用调试日志              | `CONFIG_DEBUG_LOGS`             |
+| `consoleLogFilter.enabled`       | boolean  | `false`                | 启用控制台日志过滤        | `CONFIG_LOG_FILTER_ENABLED`     |
+| `consoleLogFilter.mode`          | string   | `"whitelist"`          | 过滤模式（白名单/黑名单） | `CONFIG_LOG_FILTER_MODE`        |
+| `consoleLogFilter.levels`        | string[] | `["error", "warn"]`    | 要过滤的日志级别          | `CONFIG_LOG_FILTER_LEVELS` \*   |
+| `consoleLogFilter.keywords`      | string[] | `["starting account"]` | 要过滤的关键词            | `CONFIG_LOG_FILTER_KEYWORDS` \* |
+| `consoleLogFilter.regexPatterns` | string[] | `[]`                   | 用于过滤的正则表达式模式  |                                 |
 
 > [!NOTE]
 > \* Docker `CONFIG_*` 数组值为逗号分隔的字符串，例如 `"error,warn"`。正则表达式模式必须直接在 `config.json` 中设置。
 
 ### 代理（Proxy）
 
-| 设置项                          | 类型    | 默认值  | 说明                                            | Docker 环境变量                          |
-| ------------------------------- | ------- | ------- | ----------------------------------------------- | ---------------------------------------- |
-| `proxy.queryEngine`             | boolean | `true`  | 代理查询引擎请求                                | `CONFIG_PROXY_QUERY_ENGINE`              |
-| `proxy.ignoreCertificateErrors` | boolean | `false` | 为拦截代理禁用浏览器 TLS 证书验证               | `CONFIG_PROXY_IGNORE_CERTIFICATE_ERRORS` |
+| 设置项                          | 类型    | 默认值  | 说明                              | Docker 环境变量                          |
+| ------------------------------- | ------- | ------- | --------------------------------- | ---------------------------------------- |
+| `proxy.queryEngine`             | boolean | `true`  | 代理查询引擎请求                  | `CONFIG_PROXY_QUERY_ENGINE`              |
+| `proxy.ignoreCertificateErrors` | boolean | `false` | 为拦截代理禁用浏览器 TLS 证书验证 | `CONFIG_PROXY_IGNORE_CERTIFICATE_ERRORS` |
 
 对于普通的 HTTP(S)/SOCKS 代理，请保持 `proxy.ignoreCertificateErrors` 禁用。启用它会削弱整个浏览器上下文的 TLS 保护，仅应在受信任的拦截代理无法提供有效证书时使用。
 
@@ -502,31 +502,31 @@ RSS 订阅使用点分路径 - `rss` 表示所有订阅，`rss.<站点>` 表示�
 
 脚本支持多种 Webhook 通知渠道，可在运行过程中将日志推送到你选择的通知服务。通过 `webhook.webhookLogFilter` 可以控制哪些日志会被推送。
 
-| 设置项                                  | 类型     | 默认值                                              | 说明                        | Docker 环境变量                          |
-| --------------------------------------- | -------- | --------------------------------------------------- | --------------------------- | ---------------------------------------- |
-| `webhook.discord.enabled`               | boolean  | `false`                                             | 启用 Discord Webhook        | `CONFIG_DISCORD_ENABLED`                 |
-| `webhook.discord.url`                   | string   | `""`                                                | Discord Webhook URL         | `CONFIG_DISCORD_URL`                     |
-| `webhook.telegram.enabled`              | boolean  | `false`                                             | 启用 Telegram Webhook       | `CONFIG_TELEGRAM_ENABLED`                |
-| `webhook.telegram.botToken`             | string   | `""`                                                | Telegram Bot Token          | `CONFIG_TELEGRAM_BOTTOKEN`               |
-| `webhook.telegram.chatId`               | string   | `""`                                                | Telegram Chat ID            | `CONFIG_TELEGRAM_CHATID`                 |
-| `webhook.ntfy.enabled`                  | boolean  | `false`                                             | 启用 ntfy 通知              | `CONFIG_NTFY_ENABLED`                    |
-| `webhook.ntfy.url`                      | string   | `""`                                                | ntfy 服务器 URL             | `CONFIG_NTFY_URL`                        |
-| `webhook.ntfy.topic`                    | string   | `""`                                                | ntfy 话题                   | `CONFIG_NTFY_TOPIC`                      |
-| `webhook.ntfy.token`                    | string   | `""`                                                | ntfy 认证令牌               | `CONFIG_NTFY_TOKEN`                      |
-| `webhook.ntfy.title`                    | string   | `"Microsoft-Rewards-Script"`                        | 通知标题                    | `CONFIG_NTFY_TITLE`                      |
-| `webhook.ntfy.tags`                     | string[] | `["bot", "notify"]`                                 | 通知标签                    | `CONFIG_NTFY_TAGS` \*                    |
-| `webhook.ntfy.priority`                 | number   | `3`                                                 | 通知优先级（1-5）           | `CONFIG_NTFY_PRIORITY`                   |
-| `webhook.pushplus.enabled`              | boolean  | `false`                                             | 启用 PushPlus 通知          | `CONFIG_PUSHPLUS_ENABLED`                |
-| `webhook.pushplus.token`                | string   | `""`                                                | PushPlus Token              | `CONFIG_PUSHPLUS_TOKEN`                  |
-| `webhook.pushplus.title`                | string   | `"Microsoft-Rewards-Script"`                        | 推送标题                    | `CONFIG_PUSHPLUS_TITLE`                  |
-| `webhook.pushplus.template`             | string   | `"txt"`                                             | 推送模板                    | `CONFIG_PUSHPLUS_TEMPLATE`               |
-| `webhook.pushplus.channel`              | string   | `""`                                                | 推送渠道                    | `CONFIG_PUSHPLUS_CHANNEL`                |
-| `webhook.pushplus.webhook`              | string   | `""`                                                | Webhook 回调地址            | `CONFIG_PUSHPLUS_WEBHOOK`                |
-| `webhook.webhookLogFilter.enabled`       | boolean  | `false`                                             | 启用 Webhook 日志过滤       | `CONFIG_WEBHOOK_LOG_FILTER_ENABLED`      |
-| `webhook.webhookLogFilter.mode`          | string   | `"whitelist"`                                       | 过滤模式（白名单/黑名单）   | `CONFIG_WEBHOOK_LOG_FILTER_MODE`         |
-| `webhook.webhookLogFilter.levels`        | string[] | `["error"]`                                         | 要推送的日志级别            | `CONFIG_WEBHOOK_LOG_FILTER_LEVELS` \*    |
-| `webhook.webhookLogFilter.keywords`      | string[] | `["starting account", "select number", "collected"]` | 要过滤的关键词               | `CONFIG_WEBHOOK_LOG_FILTER_KEYWORDS` \*  |
-| `webhook.webhookLogFilter.regexPatterns` | string[] | `[]`                                                | 用于过滤的正则表达式模式    |                                          |
+| 设置项                                   | 类型     | 默认值                                               | 说明                      | Docker 环境变量                         |
+| ---------------------------------------- | -------- | ---------------------------------------------------- | ------------------------- | --------------------------------------- |
+| `webhook.discord.enabled`                | boolean  | `false`                                              | 启用 Discord Webhook      | `CONFIG_DISCORD_ENABLED`                |
+| `webhook.discord.url`                    | string   | `""`                                                 | Discord Webhook URL       | `CONFIG_DISCORD_URL`                    |
+| `webhook.telegram.enabled`               | boolean  | `false`                                              | 启用 Telegram Webhook     | `CONFIG_TELEGRAM_ENABLED`               |
+| `webhook.telegram.botToken`              | string   | `""`                                                 | Telegram Bot Token        | `CONFIG_TELEGRAM_BOTTOKEN`              |
+| `webhook.telegram.chatId`                | string   | `""`                                                 | Telegram Chat ID          | `CONFIG_TELEGRAM_CHATID`                |
+| `webhook.ntfy.enabled`                   | boolean  | `false`                                              | 启用 ntfy 通知            | `CONFIG_NTFY_ENABLED`                   |
+| `webhook.ntfy.url`                       | string   | `""`                                                 | ntfy 服务器 URL           | `CONFIG_NTFY_URL`                       |
+| `webhook.ntfy.topic`                     | string   | `""`                                                 | ntfy 话题                 | `CONFIG_NTFY_TOPIC`                     |
+| `webhook.ntfy.token`                     | string   | `""`                                                 | ntfy 认证令牌             | `CONFIG_NTFY_TOKEN`                     |
+| `webhook.ntfy.title`                     | string   | `"Microsoft-Rewards-Script"`                         | 通知标题                  | `CONFIG_NTFY_TITLE`                     |
+| `webhook.ntfy.tags`                      | string[] | `["bot", "notify"]`                                  | 通知标签                  | `CONFIG_NTFY_TAGS` \*                   |
+| `webhook.ntfy.priority`                  | number   | `3`                                                  | 通知优先级（1-5）         | `CONFIG_NTFY_PRIORITY`                  |
+| `webhook.pushplus.enabled`               | boolean  | `false`                                              | 启用 PushPlus 通知        | `CONFIG_PUSHPLUS_ENABLED`               |
+| `webhook.pushplus.token`                 | string   | `""`                                                 | PushPlus Token            | `CONFIG_PUSHPLUS_TOKEN`                 |
+| `webhook.pushplus.title`                 | string   | `"Microsoft-Rewards-Script"`                         | 推送标题                  | `CONFIG_PUSHPLUS_TITLE`                 |
+| `webhook.pushplus.template`              | string   | `"txt"`                                              | 推送模板                  | `CONFIG_PUSHPLUS_TEMPLATE`              |
+| `webhook.pushplus.channel`               | string   | `""`                                                 | 推送渠道                  | `CONFIG_PUSHPLUS_CHANNEL`               |
+| `webhook.pushplus.webhook`               | string   | `""`                                                 | Webhook 回调地址          | `CONFIG_PUSHPLUS_WEBHOOK`               |
+| `webhook.webhookLogFilter.enabled`       | boolean  | `false`                                              | 启用 Webhook 日志过滤     | `CONFIG_WEBHOOK_LOG_FILTER_ENABLED`     |
+| `webhook.webhookLogFilter.mode`          | string   | `"whitelist"`                                        | 过滤模式（白名单/黑名单） | `CONFIG_WEBHOOK_LOG_FILTER_MODE`        |
+| `webhook.webhookLogFilter.levels`        | string[] | `["error"]`                                          | 要推送的日志级别          | `CONFIG_WEBHOOK_LOG_FILTER_LEVELS` \*   |
+| `webhook.webhookLogFilter.keywords`      | string[] | `["starting account", "select number", "collected"]` | 要过滤的关键词            | `CONFIG_WEBHOOK_LOG_FILTER_KEYWORDS` \* |
+| `webhook.webhookLogFilter.regexPatterns` | string[] | `[]`                                                 | 用于过滤的正则表达式模式  |                                         |
 
 > [!NOTE]
 > \* Docker `CONFIG_*` 数组值为逗号分隔的字符串，例如 `"error,warn"`。正则表达式模式必须直接在 `config.json` 中设置。
@@ -641,14 +641,14 @@ environment:
 
 配置项说明：
 
-| 配置项    | 类型   | 默认值                    | 说明                                                           |
-| --------- | ------ | ------------------------- | -------------------------------------------------------------- |
-| `enabled` | boolean | `false`                   | 是否启用 PushPlus 推送                                         |
-| `token`   | string  | `""`                      | PushPlus Token（必填，在 PushPlus 官网获取）                   |
-| `title`   | string  | `"Microsoft-Rewards-Script"` | 推送消息标题                                               |
-| `template`| string  | `"txt"`                   | 消息模板类型（支持 `txt`、`html`、`json`、`markdown` 等）      |
-| `channel` | string  | `""`                      | 推送渠道（留空默认为微信公众号，可选 `wechat`、`webhook`、`cp`、`sms`、`mail` 等）|
-| `webhook` | string  | `""`                      | Webhook 回调地址（当 channel 为 `webhook` 时使用）             |
+| 配置项     | 类型    | 默认值                       | 说明                                                                               |
+| ---------- | ------- | ---------------------------- | ---------------------------------------------------------------------------------- |
+| `enabled`  | boolean | `false`                      | 是否启用 PushPlus 推送                                                             |
+| `token`    | string  | `""`                         | PushPlus Token（必填，在 PushPlus 官网获取）                                       |
+| `title`    | string  | `"Microsoft-Rewards-Script"` | 推送消息标题                                                                       |
+| `template` | string  | `"txt"`                      | 消息模板类型（支持 `txt`、`html`、`json`、`markdown` 等）                          |
+| `channel`  | string  | `""`                         | 推送渠道（留空默认为微信公众号，可选 `wechat`、`webhook`、`cp`、`sms`、`mail` 等） |
+| `webhook`  | string  | `""`                         | Webhook 回调地址（当 channel 为 `webhook` 时使用）                                 |
 
 > [!TIP]
 > 推送标题会自动附加日志级别标签，例如 `Microsoft-Rewards-Script [ERROR]`，方便你快速识别消息的重要程度。
@@ -669,14 +669,14 @@ environment:
 
 PushPlus 环境变量一览：
 
-| 环境变量                     | 说明                | 对应配置项              |
-| ---------------------------- | ------------------- | ----------------------- |
-| `CONFIG_PUSHPLUS_ENABLED`    | 启用 PushPlus 推送  | `pushplus.enabled`      |
-| `CONFIG_PUSHPLUS_TOKEN`      | PushPlus Token      | `pushplus.token`        |
-| `CONFIG_PUSHPLUS_TITLE`      | 推送标题            | `pushplus.title`        |
-| `CONFIG_PUSHPLUS_TEMPLATE`   | 消息模板            | `pushplus.template`     |
-| `CONFIG_PUSHPLUS_CHANNEL`    | 推送渠道            | `pushplus.channel`      |
-| `CONFIG_PUSHPLUS_WEBHOOK`    | Webhook 回调地址    | `pushplus.webhook`      |
+| 环境变量                   | 说明               | 对应配置项          |
+| -------------------------- | ------------------ | ------------------- |
+| `CONFIG_PUSHPLUS_ENABLED`  | 启用 PushPlus 推送 | `pushplus.enabled`  |
+| `CONFIG_PUSHPLUS_TOKEN`    | PushPlus Token     | `pushplus.token`    |
+| `CONFIG_PUSHPLUS_TITLE`    | 推送标题           | `pushplus.title`    |
+| `CONFIG_PUSHPLUS_TEMPLATE` | 消息模板           | `pushplus.template` |
+| `CONFIG_PUSHPLUS_CHANNEL`  | 推送渠道           | `pushplus.channel`  |
+| `CONFIG_PUSHPLUS_WEBHOOK`  | Webhook 回调地址   | `pushplus.webhook`  |
 
 > [!NOTE]
 > PushPlus 与 Discord、Telegram、ntfy 共享同一套 `webhook.webhookLogFilter` 过滤规则。建议启用 `webhook.webhookLogFilter.enabled` 以避免收到过多日志推送。启用后，仅推送账号启动、2FA 验证码和账号完成摘要等关键日志。

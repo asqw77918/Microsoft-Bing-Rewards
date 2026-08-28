@@ -7,11 +7,7 @@ import { BaseActivity } from '../BaseActivity'
 export class ReadToEarn extends BaseActivity {
     public async doReadToEarn() {
         if (!this.bot.accessToken) {
-            this.bot.logger.warn(
-                this.bot.isMobile,
-                'READ-TO-EARN',
-                '跳过：应用访问令牌不可用，此活动需要该令牌！'
-            )
+            this.bot.logger.warn(this.bot.isMobile, 'READ-TO-EARN', '跳过：应用访问令牌不可用，此活动需要该令牌！')
             return
         }
 

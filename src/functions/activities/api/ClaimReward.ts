@@ -21,11 +21,7 @@ export class ClaimReward extends BaseActivity {
             return
         }
         if (!child.reportable) {
-            this.bot.logger.warn(
-                this.bot.isMobile,
-                'CLAIM-REWARD',
-                `跳过 ${offerId}：不可上报（已完成/已锁定/已禁用）`
-            )
+            this.bot.logger.warn(this.bot.isMobile, 'CLAIM-REWARD', `跳过 ${offerId}：不可上报（已完成/已锁定/已禁用）`)
             return
         }
 
