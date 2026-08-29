@@ -116,9 +116,7 @@ export class Logger {
         const hasWebhook = Boolean(
             (config.webhook.discord?.enabled && config.webhook.discord.url) ||
             (config.webhook.ntfy?.enabled && config.webhook.ntfy.url) ||
-            (config.webhook.telegram?.enabled &&
-                config.webhook.telegram.botToken &&
-                config.webhook.telegram.chatId) ||
+            (config.webhook.telegram?.enabled && config.webhook.telegram.botToken && config.webhook.telegram.chatId) ||
             (config.webhook.pushplus?.enabled && config.webhook.pushplus.token)
         )
         if (!hasWebhook) return
