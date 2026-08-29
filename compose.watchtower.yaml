@@ -6,8 +6,7 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         environment:
-            # 只监控名称含 "microsoft-rewards-script" 的容器，不打扰其他容器
             WATCHTOWER_CLEANUP: 'true' # 更新成功后删除旧镜像
             WATCHTOWER_SCHEDULE: '0 4 * * *' # 每天凌晨 4 点检查一次
-            WATCHTOWER_POLL_INTERVAL: '86400' # 兜底轮询间隔（秒），与调度表二选一即可
+            WATCHTOWER_LABEL_ENABLE: 'true' # 仅监控带 watchtower.enable=true 标签的容器
             WATCHTOWER_DEBUG: 'false'
