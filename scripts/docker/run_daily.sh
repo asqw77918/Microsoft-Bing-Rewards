@@ -210,6 +210,15 @@ else
     echo "[$(date)] [run_daily.sh] 跳过随机休眠"
 fi
 
+# 清理上一次运行可能残留的 Chromium/Playwright 进程，防止浏览器锁冲突导致本次运行快速失败
+pkill -f 'chromium' 2>/dev/null || true
+pkill -f 'chrome' 2>/dev/null || true
+pkill -f 'playwright' 2>/dev/null || true
+# 清理 Playwright 可能残留的 SingletonLock 文件（用户数据目录锁）
+find /tmp -name 'SingletonLock' -mmin +5 -delete 2>/dev/null || true
+find /root -name 'SingletonLock' -mmin +5 -delete 2>/dev/null || true
+echo "[$(date)] [run_daily.sh] 残留浏览器进程清理完成"
+
 # 启动实际脚本
 echo "[$(date)] [run_daily.sh] 正在启动脚本..."
 run_status=0

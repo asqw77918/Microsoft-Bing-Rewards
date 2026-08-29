@@ -96,7 +96,7 @@ export async function sendPushPlus(config: WebhookPushPlusConfig, content: strin
     const channel = config.channel || ''
     const webhook = config.webhook || ''
 
-    const url = 'http://www.pushplus.plus/send'
+    const url = 'https://www.pushplus.plus/send'
 
     const data: Record<string, unknown> = {
         token: config.token,
@@ -122,6 +122,7 @@ export async function sendPushPlus(config: WebhookPushPlusConfig, content: strin
         } catch (err) {
             const status = (err as { response?: { status?: number } })?.response?.status
             if (status === 429) return
+            console.error(`[PushPlus] 推送失败 | HTTP ${status ?? 'N/A'} | ${err instanceof Error ? err.message : String(err)}`)
         }
     })
 }
