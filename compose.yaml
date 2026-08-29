@@ -66,5 +66,5 @@ services:
         labels:
             - com.centurylinklabs.watchtower.enable=true
 
-        security_opt:
-            - no-new-privileges:true
+        #security_opt:
+        #    - no-new-privileges:true
