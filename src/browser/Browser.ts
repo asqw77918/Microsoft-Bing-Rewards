@@ -9,7 +9,6 @@ import { formatBrowserProxyServer } from '../util/Proxy'
 import { UserAgentManager } from './UserAgent'
 
 import type { Account } from '../interface/Account'
-import { configureMediaBlocking } from './MediaBlocker'
 
 /* Test Stuff
 https://abrahamjuliot.github.io/creepjs/
@@ -166,8 +165,6 @@ class Browser {
                     delete window.RTCDataChannel
                 })
             }
-
-            await configureMediaBlocking(this.bot, context)
 
             context.on('page', p => {
                 p.on('crash', () => this.bot.logger.error(this.bot.isMobile, 'BROWSER', `渲染进程崩溃 | ${p.url()}`))
