@@ -13,14 +13,14 @@ services:
             # Load account credentials from the .env file (ACCOUNT_1_EMAIL, optional ACCOUNT_1_PASSWORD, etc.)
             - path: .env
         environment:
-            TZ: "Asia/Shanghai" # Set your timezone for proper scheduling
+            TZ: 'Asia/Shanghai' # Set your timezone for proper scheduling
             NODE_ENV: 'production'
             CRON_SCHEDULE: '5 16 * * *' # use crontab.guru to customize your schedule
             RUN_ON_START: 'true' # run script immediately on container start
             SKIP_RANDOM_SLEEP: 'false'
-            MIN_SLEEP_MINUTES: "5"
-            MAX_SLEEP_MINUTES: "10"
-            STUCK_PROCESS_TIMEOUT_HOURS: "8"          
+            MIN_SLEEP_MINUTES: '5'
+            MAX_SLEEP_MINUTES: '10'
+            STUCK_PROCESS_TIMEOUT_HOURS: '8'
             # ── Configuration 调节设置─────────────────────────────────
             # Uncomment to override defaults, a full list of configuration options are in the README.
             #CONFIG_CLUSTERS: '1'
@@ -56,7 +56,7 @@ services:
             CONFIG_SEARCH_READ_DELAY_MAX: '7min'
             #
             # 查询源（美区热搜，无国内核心特性）：
-            CONFIG_SEARCH_QUERY_ENGINES: 'google,wikirandom,hackernews,local'  # 美区热搜；国内推荐，无需代理
+            CONFIG_SEARCH_QUERY_ENGINES: 'google,wikirandom,hackernews,local' # 美区热搜；国内推荐，无需代理
             #CONFIG_CHINA_API_APPKEY: ''           # gmya.net appkey，填入解除免费档限流（留空走免费档）
             #── 运行摘要推送，设为 false 则恢复逐条实时推送 ──
             CONFIG_PUSHPLUS_DAILYSUMMARY: 'true'
@@ -83,11 +83,11 @@ services:
             #API_ALLOW_ENV_OVERRIDES: 'true'
             #API_ALLOW_CONFIG_REVEAL: 'true'
             #API_ALLOW_CONFIG_WRITE: 'true'
-			# PushPlus 推送（国内推荐，微信推送，无需翻墙）:
+            # PushPlus 推送（国内推荐，微信推送，无需翻墙）:
             CONFIG_PUSHPLUS_ENABLED: 'true'
             CONFIG_PUSHPLUS_TOKEN: '你的token'
             CONFIG_PUSHPLUS_TITLE: 'Bing-Rewards奖励日志'
-            CONFIG_PUSHPLUS_TEMPLATE: 'txt'   # txt / html / markdown
+            CONFIG_PUSHPLUS_TEMPLATE: 'txt' # txt / html / markdown
         # ── API mode port mapping ──────────────────────────────────────
         # Uncomment when API_MODE=true
         #ports:
