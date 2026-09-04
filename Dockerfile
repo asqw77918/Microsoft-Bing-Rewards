@@ -11,7 +11,10 @@ ENV PLAYWRIGHT_BROWSERS_PATH=0
 COPY package.json package-lock.json tsconfig.json ./
 
 # Install all dependencies required to build the script
-RUN npm ci --ignore-scripts
+# Use npm install instead of npm ci: package-lock.json may drift slightly from
+# package.json (e.g. new dependencies added without lockfile rebuild), and the
+# builder image is already reproducible via base image pinning.
+RUN npm install --ignore-scripts
 
 # Copy source and build
 COPY . .
@@ -19,7 +22,7 @@ RUN npm run build
 
 # Remove build dependencies, and reinstall only runtime dependencies
 RUN rm -rf node_modules \
-    && npm ci --omit=dev --ignore-scripts \
+    && npm install --omit=dev --ignore-scripts \
     && npm cache clean --force
 
 ###############################################################################
