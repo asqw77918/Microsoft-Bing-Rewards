@@ -13,29 +13,53 @@ services:
             # Load account credentials from the .env file (ACCOUNT_1_EMAIL, optional ACCOUNT_1_PASSWORD, etc.)
             - path: .env
         environment:
-            # ── Scheduler ──────────────────────────────────────
-            TZ: 'America/Toronto'
+            TZ: "Asia/Shanghai" # Set your timezone for proper scheduling
             NODE_ENV: 'production'
-            # CRON_SCHEDULE is the *initial* default. It will run as default unless changed by the API
-            # API schedule changes are saved to ./config/schedule.json, delete
-            # that file to revert to the base CRON_SCHEDULE again.
-            CRON_SCHEDULE: '0 7 * * *' # use crontab.guru to customize your schedule
+            CRON_SCHEDULE: '5 16 * * *' # use crontab.guru to customize your schedule
             RUN_ON_START: 'true' # run script immediately on container start
             SKIP_RANDOM_SLEEP: 'false'
-            #MIN_SLEEP_MINUTES: "5"
-            #MAX_SLEEP_MINUTES: "50"
-            #STUCK_PROCESS_TIMEOUT_HOURS: "8"
-
-            # ── API mode ──────────────────────────────────────
-            # Set API_MODE=true to run the API server for additional control options
-            #API_MODE: 'true'
-            #API_TOKEN: '${API_TOKEN}'             # required for API mode, see example.env
-            # API write/reveal capabilities are separate opt-ins and are off by default.
-            #API_ALLOW_SCHEDULE_WRITE: 'true'
-            #API_ALLOW_ENV_OVERRIDES: 'true'
-            #API_ALLOW_CONFIG_REVEAL: 'true'
-            #API_ALLOW_CONFIG_WRITE: 'true'
-
+            MIN_SLEEP_MINUTES: "5"
+            MAX_SLEEP_MINUTES: "10"
+            STUCK_PROCESS_TIMEOUT_HOURS: "8"          
+            # ── Configuration 调节设置─────────────────────────────────
+            # Uncomment to override defaults, a full list of configuration options are in the README.
+            #CONFIG_CLUSTERS: '1'
+            #CONFIG_ACCOUNT_DELAY_MIN: '1min'
+            #CONFIG_ACCOUNT_DELAY_MAX: '3min'
+            # Continue even if Microsoft reports Fraud_UserWarning_BotScore_UX (not recommended).
+            #CONFIG_CONTINTUE_ON_BOT_WARNING: 'false'
+            # Block browser image/video/audio requests to reduce transferred media bytes.
+            #CONFIG_EXPERIMENTAL_BLOCK_MEDIA: 'false'
+            # Report the Edge browsing streak in the background (experimental).
+            #CONFIG_EXPERIMENTAL_EDGE_BROWSING: 'false'
+            # Only enable for a TLS-intercepting proxy whose certificate cannot be trusted normally.
+            #CONFIG_PROXY_IGNORE_CERTIFICATE_ERRORS: 'false'
+            #所有操作的超时时间
+            CONFIG_GLOBAL_TIMEOUT: '45sec'
+            #激活视觉搜索连续打卡并执行视觉搜索
+            CONFIG_WORKER_VISUAL_SEARCH: 'true'
+            #... add additional configuration overrides as needed
+            # Uncomment to override defaults, a full list of configuration options are in the README.
+            #
+            # General:
+            #CONFIG_CLUSTERS: '1'
+            #随机滚动搜索结果
+            CONFIG_SEARCH_SCROLL_RANDOM: 'true'
+            #每个搜索结果的停留时间
+            CONFIG_SEARCH_VISIT_TIME: '15sec'
+            #搜索间隔（保守，防 cooldown）
+            Search behaviour:
+            CONFIG_SEARCH_DELAY_MIN: '69sec'
+            CONFIG_SEARCH_DELAY_MAX: '5min'
+            # 阅读文章间隔（默认 6~11 分钟太长，缩短；不建议低于 1min，太短可能不计分）
+            CONFIG_SEARCH_READ_DELAY_MIN: '3min'
+            CONFIG_SEARCH_READ_DELAY_MAX: '7min'
+            #
+            # 查询源（美区热搜，无国内核心特性）：
+            CONFIG_SEARCH_QUERY_ENGINES: 'google,wikirandom,hackernews,local'  # 美区热搜；国内推荐，无需代理
+            #CONFIG_CHINA_API_APPKEY: ''           # gmya.net appkey，填入解除免费档限流（留空走免费档）
+            #── 运行摘要推送，设为 false 则恢复逐条实时推送 ──
+            CONFIG_PUSHPLUS_DAILYSUMMARY: 'true'
             #  ── Configuration ──────────────────────────────────────
             # Uncomment to override defaults, a full list of configuration options are in the README.
             #CONFIG_CLUSTERS: '1'
@@ -50,7 +74,20 @@ services:
             # Only enable for a TLS-intercepting proxy whose certificate cannot be trusted normally.
             #CONFIG_PROXY_IGNORE_CERTIFICATE_ERRORS: 'false'
             #... add additional configuration overrides as needed
-
+            # ── API mode ──────────────────────────────────────
+            # Set API_MODE=true to run the API server for additional control options
+            #API_MODE: 'true'
+            #API_TOKEN: '${API_TOKEN}'             # required for API mode, see example.env
+            # API write/reveal capabilities are separate opt-ins and are off by default.
+            #API_ALLOW_SCHEDULE_WRITE: 'true'
+            #API_ALLOW_ENV_OVERRIDES: 'true'
+            #API_ALLOW_CONFIG_REVEAL: 'true'
+            #API_ALLOW_CONFIG_WRITE: 'true'
+			# PushPlus 推送（国内推荐，微信推送，无需翻墙）:
+            CONFIG_PUSHPLUS_ENABLED: 'true'
+            CONFIG_PUSHPLUS_TOKEN: '你的token'
+            CONFIG_PUSHPLUS_TITLE: 'Bing-Rewards奖励日志'
+            CONFIG_PUSHPLUS_TEMPLATE: 'txt'   # txt / html / markdown
         # ── API mode port mapping ──────────────────────────────────────
         # Uncomment when API_MODE=true
         #ports:
