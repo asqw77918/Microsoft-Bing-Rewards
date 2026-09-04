@@ -3,7 +3,7 @@ import type { Page } from 'patchright'
 import type { MicrosoftRewardsBot } from '../../index'
 import { saveStorageState } from '../../util/SessionStore'
 import { unknownPageDiagnostic } from '../../util/ErrorDiagnostic'
-import { configureMediaBlocking, suspendMediaBlocking } from '../MediaBlocker'
+import { suspendMediaBlocking } from '../MediaBlocker'
 
 import { MobileAccessLogin } from './methods/MobileAccessLogin'
 import { EmailLogin } from './methods/EmailLogin'

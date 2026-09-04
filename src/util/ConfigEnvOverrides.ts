@@ -268,7 +268,7 @@ Examples:
     }
 
     if (command === 'apply') {
-        const configPath = getArg('--config')
+        const configPath = readOnlyOption('--config')
         if (!configPath) {
             console.error('用法：node dist/util/ConfigEnvOverrides.js apply --config <路径>')
             process.exit(1)
