@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
 # 确保 Playwright 使用预安装的浏览器
 export PLAYWRIGHT_BROWSERS_PATH=0
@@ -173,7 +173,6 @@ if [ "${API_MODE:-false}" = "true" ]; then
     fi
     envsubst < /etc/cron.d/microsoft-rewards-cron.template > /etc/cron.d/microsoft-rewards-cron
     chmod 0644 /etc/cron.d/microsoft-rewards-cron
-    crontab /etc/cron.d/microsoft-rewards-cron
     cron -f &
     echo "[启动] cron 已在后台启动（调度：$CRON_SCHEDULE，时区：$TZ）"
   else
@@ -192,9 +191,8 @@ fi
 export TZ
 envsubst < /etc/cron.d/microsoft-rewards-cron.template > /etc/cron.d/microsoft-rewards-cron
 chmod 0644 /etc/cron.d/microsoft-rewards-cron
-crontab /etc/cron.d/microsoft-rewards-cron
 
 echo "[启动] cron 已配置调度：$CRON_SCHEDULE，时区：$TZ；$(date) 启动 cron"
 
-# 7. 前台启动 cron (PID 1)
-exec cron -f
+# 7. 前台启动 cron (PID 1)，通过 exec "$@" 执行 CMD（默认 cron -f -l 2）
+exec "$@"

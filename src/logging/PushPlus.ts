@@ -1,5 +1,4 @@
-import { httpRequest } from '../util/Http'
-import type { HttpRequestConfig } from '../util/Http'
+import axios from 'axios'
 import PQueue from 'p-queue'
 import type { WebhookPushPlusConfig } from '../interface/Config'
 import type { LogLevel } from './Logger'
@@ -36,6 +35,12 @@ export function getPushPlusBufferSize(): number {
 
 function buildSummary(entries: PushPlusLogEntry[]): string {
     const now = new Date().toLocaleString()
+
+    // buffer 为空时仍发送基本摘要，确保用户收到运行完成通知
+    if (entries.length === 0) {
+        return `======== 运行总结汇报 ========\n生成时间: ${now}\n日志总数: 0 条\n（未收集到日志，可能因 IPC 竞态导致日志丢失）\n================================`
+    }
+
     const errors = entries.filter(e => e.level === 'error')
     const warns = entries.filter(e => e.level === 'warn')
     const infos = entries.filter(e => e.level === 'info')
@@ -69,7 +74,6 @@ function buildSummary(entries: PushPlusLogEntry[]): string {
 
 export async function sendPushPlusSummary(config: WebhookPushPlusConfig | undefined): Promise<void> {
     if (!config?.token) return
-    if (pushPlusLogBuffer.length === 0) return
 
     const summary = buildSummary(pushPlusLogBuffer)
     pushPlusLogBuffer.length = 0
@@ -77,26 +81,13 @@ export async function sendPushPlusSummary(config: WebhookPushPlusConfig | undefi
     await sendPushPlus(config, summary, 'info')
 }
 
-function getPushPlusTemplate(level: LogLevel): string {
-    switch (level) {
-        case 'error':
-            return 'txt'
-        case 'warn':
-            return 'txt'
-        default:
-            return 'txt'
-    }
-}
-
 export async function sendPushPlus(config: WebhookPushPlusConfig, content: string, level: LogLevel): Promise<void> {
     if (!config?.token) return
 
     const title = config.title || 'Microsoft-Rewards-Script'
-    const template = config.template || getPushPlusTemplate(level)
+    const template = config.template || 'txt'
     const channel = config.channel || ''
     const webhook = config.webhook || ''
-
-    const url = 'https://www.pushplus.plus/send'
 
     const data: Record<string, unknown> = {
         token: config.token,
@@ -108,18 +99,16 @@ export async function sendPushPlus(config: WebhookPushPlusConfig, content: strin
     if (channel) data['channel'] = channel
     if (webhook) data['webhook'] = webhook
 
-    const request: HttpRequestConfig = {
-        method: 'POST',
-        url: url,
-        headers: { 'Content-Type': 'application/json' },
-        data: data,
-        timeout: 10000
-    }
-
     await pushPlusQueue.add(async () => {
         try {
-            await httpRequest(request)
-        } catch (err) {
+            await axios({
+                method: 'POST',
+                url: 'https://www.pushplus.plus/send',
+                headers: { 'Content-Type': 'application/json' },
+                data: data,
+                timeout: 10000
+            })
+        } catch (err: unknown) {
             const status = (err as { response?: { status?: number } })?.response?.status
             if (status === 429) return
             console.error(

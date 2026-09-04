@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
 # 保留调用者注入的任何值（例如来自 entrypoint 的 RUN_ON_START 前缀的 SKIP_RANDOM_SLEEP=true），
 # 以防 env 文件覆盖它。

@@ -111,4 +111,4 @@ COPY --chmod=755 scripts/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 # Entrypoint handles TZ, accounts/config generation, initial run toggle,
 # cron templating & launch, or API server startup when API_MODE=true
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["sh", "-c", "echo 'Container started; cron is running.'"]
+CMD ["cron", "-f", "-l", "2"]
