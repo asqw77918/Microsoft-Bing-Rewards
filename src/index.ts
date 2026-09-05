@@ -363,6 +363,11 @@ export class MicrosoftRewardsBot {
                     'green'
                 )
 
+                // 排空 IPC pipe 剩余日志：多轮 setImmediate 让 message 事件先消费，避免竞态
+                for (let i = 0; i < 3; i++) {
+                    await new Promise(resolve => setImmediate(resolve))
+                }
+
                 // pushplus 每日总结模式：发送本次运行汇总
                 await sendPushPlusSummary(this.config.webhook.pushplus)
 
