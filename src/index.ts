@@ -400,11 +400,11 @@ export class MicrosoftRewardsBot {
             try {
                 const stats = await this.runTasks(chunk, runStartTime ?? runStartTimeFromMaster ?? Date.now())
 
-                if (process.send) {
-                    process.send({ __stats: stats })
-                }
-
                 await flushAllWebhooks()
+
+                // 方案B：发送 __stats 作为收尾信号，并等它（连同全部 __ipcLog）写入 IPC 通道后再退出，
+                // 避免 process.exit(0) 强杀丢弃尚未发送的日志
+                await this.waitForIpcFlush({ __stats: stats })
                 process.exit(0)
             } catch (error) {
                 this.logger.error(
@@ -414,8 +414,36 @@ export class MicrosoftRewardsBot {
                 )
 
                 await flushAllWebhooks()
+                await this.waitForIpcFlush({ __stats: undefined })
                 process.exit(1)
             }
+        })
+    }
+
+    /**
+     * 方案B：等待最后一批 IPC 消息（含全部 __ipcLog 与 __stats）真正写完后再退出，
+     * 避免 process.exit 强杀丢弃缓冲区中尚未发送的日志（IPC 日志竞态的根源）。
+     * 利用 process.send 的回调作为"已写出"信号（__stats 为 FIFO 末位，其写完即代表全部 __ipcLog 已写出），
+     * 并加超时兜底防通道异常导致永不返回。
+     */
+    private waitForIpcFlush(payload: unknown): Promise<void> {
+        return new Promise(resolve => {
+            if (!process.send) {
+                resolve()
+                return
+            }
+            let settled = false
+            const done = () => {
+                if (settled) return
+                settled = true
+                resolve()
+            }
+            try {
+                process.send(payload ?? {}, done)
+            } catch {
+                done()
+            }
+            setTimeout(done, 1000).unref()
         })
     }
 
