@@ -290,6 +290,8 @@ export class MicrosoftRewardsBot {
 
         const allAccountStats: AccountStats[] = []
         let hadWorkerFailure = false
+        // IPC 消息最后到达时间戳，用于"安静屏障"判定管道何时排空
+        let ipcLastMsgAt = Date.now()
 
         for (const [chunkIndex, chunk] of accountChunks.entries()) {
             if (chunkIndex > 0) {
@@ -300,6 +302,8 @@ export class MicrosoftRewardsBot {
             worker.send?.({ chunk, runStartTime })
 
             worker.on('message', (msg: { __ipcLog?: IpcLog; __stats?: AccountStats[] }) => {
+                ipcLastMsgAt = Date.now()
+
                 if (msg.__stats) {
                     allAccountStats.push(...msg.__stats)
                 }
@@ -363,10 +367,29 @@ export class MicrosoftRewardsBot {
                     'green'
                 )
 
-                // 排空 IPC pipe 剩余日志：多轮 setImmediate 让 message 事件先消费，避免竞态
-                for (let i = 0; i < 3; i++) {
-                    await new Promise(resolve => setImmediate(resolve))
-                }
+                // 【确定性安静屏障】cluster 'exit' 事件永远优先于 worker 'message' 事件被处理，
+                // 因此必须主动等 IPC 通道安静。只要仍有日志在分流（message 事件持续到达）
+                // 就继续等，直到连续 idleWindow 毫秒无新消息，才认为所有 __ipcLog 已全部
+                // collect 进 PushPlus 缓冲。相比固定轮数能自适应日志量，真正消除竞态。
+                await new Promise<void>(resolve => {
+                    let done = false
+                    const finish = () => {
+                        if (done) return
+                        done = true
+                        resolve()
+                    }
+                    const idleWindowMs = 60
+                    const checkIdle = () => {
+                        if (Date.now() - ipcLastMsgAt >= idleWindowMs) {
+                            finish()
+                        } else {
+                            setTimeout(checkIdle, 20)
+                        }
+                    }
+                    // 兜底：1.2s 后无论如何放行，防异常导致永不 resolve 卡死收尾
+                    setTimeout(finish, 1200).unref()
+                    checkIdle()
+                })
 
                 // pushplus 每日总结模式：发送本次运行汇总
                 await sendPushPlusSummary(this.config.webhook.pushplus)
