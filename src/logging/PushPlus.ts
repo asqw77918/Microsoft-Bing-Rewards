@@ -38,7 +38,12 @@ function buildSummary(entries: PushPlusLogEntry[]): string {
 
     // buffer 为空时仍发送基本摘要，确保用户收到运行完成通知
     if (entries.length === 0) {
-        return `======== 运行总结汇报 ========\n生成时间: ${now}\n日志总数: 0 条\n（未收集到日志，可能因 IPC 竞态导致日志丢失）\n================================`
+        // 诊断：若持续出现 0 条，说明日志未进入缓冲。常见原因：
+        //   1. clusters=1（单进程）时 pushplus.enabled 或 token 未正确配置
+        //   2. clusters>1 时 worker 的 IPC 日志未到达主进程
+        //   3. 所有日志均为 debug 级别（被 baseLog 过滤）
+        console.warn('[PushPlus] 警告: 日志缓冲为空，将发送 0 条摘要。请检查 pushplus.enabled/token 与 clusters 配置。')
+        return `======== 运行总结汇报 ========\n生成时间: ${now}\n日志总数: 0 条\n（未收集到日志，请检查 pushplus 配置或查看容器日志中的诊断信息）\n================================`
     }
 
     const errors = entries.filter(e => e.level === 'error')

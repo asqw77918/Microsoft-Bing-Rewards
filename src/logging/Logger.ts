@@ -96,8 +96,8 @@ export class Logger {
             errorDiagnostic(page, error)
         }
 
-        const consoleAllowed = this.shouldPassFilter(config.consoleLogFilter, level, cleanMsg)
-        const webhookAllowed = this.shouldPassFilter(config.webhook.webhookLogFilter, level, cleanMsg)
+        const consoleAllowed = Logger.shouldPassFilter(config.consoleLogFilter, level, cleanMsg)
+        const webhookAllowed = Logger.shouldPassFilter(config.webhook.webhookLogFilter, level, cleanMsg)
 
         if (consoleAllowed) {
             let logColor: ColorKey | undefined = color
@@ -111,15 +111,37 @@ export class Logger {
             consoleOut(level, consoleStr, getColorFn(logColor))
         }
 
-        if (!webhookAllowed || level === 'debug') return
+        if (level === 'debug') return
 
-        const hasWebhook = Boolean(
+        const pushplus = config.webhook.pushplus
+        const pushplusEnabled = Boolean(pushplus?.enabled && pushplus?.token)
+        const dailySummary = pushplusEnabled && (pushplus?.dailySummary ?? true)
+
+        // ── PushPlus 每日总结模式：主进程直接收集（不受 webhookLogFilter 限制）──
+        // 汇总报告需要完整日志；若被过滤器误杀会导致"日志总数: 0 条"。
+        if (pushplusEnabled && dailySummary && cluster.isPrimary) {
+            collectPushPlusLog(level, cleanMsg)
+        }
+
+        // ── 以下 webhook 受 webhookLogFilter 限制 ────────────────────────────
+        if (!webhookAllowed) return
+
+        const hasOtherWebhook = Boolean(
             (config.webhook.discord?.enabled && config.webhook.discord.url) ||
             (config.webhook.ntfy?.enabled && config.webhook.ntfy.url) ||
             (config.webhook.telegram?.enabled && config.webhook.telegram.botToken && config.webhook.telegram.chatId) ||
-            (config.webhook.pushplus?.enabled && config.webhook.pushplus.token)
+            (pushplusEnabled && !dailySummary)
         )
-        if (!hasWebhook) return
+
+        // worker 端：只要 PushPlus 汇总模式开启 或 有其他 webhook 通过过滤，就转发 IPC 日志
+        // 主进程统一处理各 webhook 的分发与过滤
+        const shouldForwardIpc = (pushplusEnabled && dailySummary) || hasOtherWebhook
+        if (!cluster.isPrimary && shouldForwardIpc) {
+            process.send?.({ __ipcLog: { content: cleanMsg, level } })
+            return
+        }
+
+        if (!hasOtherWebhook) return
 
         if (cluster.isPrimary) {
             if (config.webhook.discord?.enabled && config.webhook.discord.url) {
@@ -136,20 +158,13 @@ export class Logger {
                 sendTelegram(config.webhook.telegram, cleanMsg, level)
             }
 
-            if (config.webhook.pushplus?.enabled && config.webhook.pushplus.token) {
-                if (config.webhook.pushplus.dailySummary ?? true) {
-                    // 每日总结模式：先收集日志，运行结束时汇总为一条推送
-                    collectPushPlusLog(level, cleanMsg)
-                } else {
-                    sendPushPlus(config.webhook.pushplus, cleanMsg, level)
-                }
+            if (pushplusEnabled && !dailySummary) {
+                sendPushPlus(pushplus!, cleanMsg, level)
             }
-        } else {
-            process.send?.({ __ipcLog: { content: cleanMsg, level } })
         }
     }
 
-    private shouldPassFilter(filter: LogFilter | undefined, level: LogLevel, message: string): boolean {
+    static shouldPassFilter(filter: LogFilter | undefined, level: LogLevel, message: string): boolean {
         if (!filter || !filter.enabled) {
             return true
         }

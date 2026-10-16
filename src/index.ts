@@ -313,6 +313,18 @@ export class MicrosoftRewardsBot {
                     const { webhook } = this.config
                     const { content, level } = log
 
+                    // PushPlus 每日总结模式：始终收集（不受 webhookLogFilter 限制），
+                    // 确保汇总报告包含完整日志
+                    if (webhook.pushplus?.enabled && webhook.pushplus.token) {
+                        if (webhook.pushplus.dailySummary ?? true) {
+                            collectPushPlusLog(level, content)
+                        }
+                    }
+
+                    // 其他 webhook（discord/ntfy/telegram/pushplus 非汇总）受 webhookLogFilter 限制
+                    const ipcWebhookAllowed = Logger.shouldPassFilter(webhook.webhookLogFilter, level, content)
+                    if (!ipcWebhookAllowed) return
+
                     if (webhook.discord?.enabled && webhook.discord.url) {
                         sendDiscord(webhook.discord.url, content, level)
                     }
@@ -322,12 +334,8 @@ export class MicrosoftRewardsBot {
                     if (webhook.telegram?.enabled && webhook.telegram.botToken && webhook.telegram.chatId) {
                         sendTelegram(webhook.telegram, content, level)
                     }
-                    if (webhook.pushplus?.enabled && webhook.pushplus.token) {
-                        if (webhook.pushplus.dailySummary ?? true) {
-                            collectPushPlusLog(level, content)
-                        } else {
-                            sendPushPlus(webhook.pushplus, content, level)
-                        }
+                    if (webhook.pushplus?.enabled && webhook.pushplus.token && !(webhook.pushplus.dailySummary ?? true)) {
+                        sendPushPlus(webhook.pushplus, content, level)
                     }
                 }
             })
