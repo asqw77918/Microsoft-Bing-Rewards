@@ -399,8 +399,8 @@ export class MicrosoftRewardsBot {
                     checkIdle()
                 })
 
-                // pushplus 每日总结模式：发送本次运行汇总
-                await sendPushPlusSummary(this.config.webhook.pushplus)
+                // pushplus 每日总结模式：发送本次运行汇总（携带账号统计生成简要推送）
+                await sendPushPlusSummary(this.config.webhook.pushplus, allAccountStats)
 
                 await flushAllWebhooks()
 
@@ -603,8 +603,8 @@ export class MicrosoftRewardsBot {
                 'green'
             )
 
-            // pushplus 每日总结模式：发送本次运行汇总
-            await sendPushPlusSummary(this.config.webhook.pushplus)
+            // pushplus 每日总结模式：发送本次运行汇总（携带账号统计生成简要推送）
+            await sendPushPlusSummary(this.config.webhook.pushplus, accountStats)
 
             await flushAllWebhooks()
             process.exit(0)

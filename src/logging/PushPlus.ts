@@ -33,54 +33,107 @@ export function getPushPlusBufferSize(): number {
     return pushPlusLogBuffer.length
 }
 
-function buildSummary(entries: PushPlusLogEntry[]): string {
-    const now = new Date().toLocaleString()
+export interface SummaryAccountStat {
+    email: string
+    initialPoints: number
+    finalPoints: number
+    collectedPoints: number
+    duration: number
+    success: boolean
+    error?: string
+}
 
-    // buffer 为空时仍发送基本摘要，确保用户收到运行完成通知
-    if (entries.length === 0) {
+const MAX_DETAIL_ITEMS = 5
+const MAX_LINE_LENGTH = 120
+
+function stripTimestampPrefix(content: string): string {
+    // 日志格式: [时间] [账号] [级别] 平台 [标题] 内容 —— 剥离时间戳前缀使推送更紧凑
+    return content.replace(/^\[[^\]]*\]\s*/, '')
+}
+
+function condenseEntries(entries: PushPlusLogEntry[]): { total: number; samples: string[] } {
+    const seen = new Set<string>()
+    const samples: string[] = []
+    for (const entry of entries) {
+        let text = stripTimestampPrefix(entry.content)
+        if (seen.has(text)) continue
+        seen.add(text)
+        if (text.length > MAX_LINE_LENGTH) text = `${text.slice(0, MAX_LINE_LENGTH)}...`
+        samples.push(text)
+    }
+    return { total: entries.length, samples }
+}
+
+function buildSummary(entries: PushPlusLogEntry[], stats?: SummaryAccountStat[]): string {
+    const now = new Date().toLocaleString()
+    const lines: string[] = []
+
+    lines.push('======== 微软奖励 运行简报 ========')
+    lines.push(`时间: ${now}`)
+
+    // ── 运行总览：优先使用账号统计（准确），缺失时退回日志计数 ──
+    if (stats && stats.length > 0) {
+        const success = stats.filter(s => s.success).length
+        const failed = stats.length - success
+        const collected = stats.reduce((sum, s) => sum + s.collectedPoints, 0)
+        const balance = stats.reduce((sum, s) => sum + s.finalPoints, 0)
+        const totalMinutes = (stats.reduce((sum, s) => sum + s.duration, 0) / 60).toFixed(1)
+
+        lines.push(`账号: ${stats.length} 个 | 成功 ${success} | 失败 ${failed}`)
+        lines.push(`积分: +${collected} | 当前余额 ${balance}`)
+        lines.push(`耗时: ${totalMinutes} 分钟`)
+
+        lines.push('')
+        lines.push('── 账号明细 ──')
+        for (const s of stats) {
+            const errorText = s.error ? ` | ${s.error.slice(0, MAX_LINE_LENGTH)}` : ''
+            lines.push(`[${s.success ? '成功' : '失败'}] ${s.email} | +${s.collectedPoints}分${errorText}`)
+        }
+    } else if (entries.length > 0) {
+        const errors = entries.filter(e => e.level === 'error').length
+        const warns = entries.filter(e => e.level === 'warn').length
+        lines.push(`日志: ${entries.length} 条 | 错误 ${errors} | 警告 ${warns}`)
+    } else {
         // 诊断：若持续出现 0 条，说明日志未进入缓冲。常见原因：
         //   1. clusters=1（单进程）时 pushplus.enabled 或 token 未正确配置
         //   2. clusters>1 时 worker 的 IPC 日志未到达主进程
         //   3. 所有日志均为 debug 级别（被 baseLog 过滤）
-        console.warn('[PushPlus] 警告: 日志缓冲为空，将发送 0 条摘要。请检查 pushplus.enabled/token 与 clusters 配置。')
-        return `======== 运行总结汇报 ========\n生成时间: ${now}\n日志总数: 0 条\n（未收集到日志，请检查 pushplus 配置或查看容器日志中的诊断信息）\n================================`
+        console.warn('[PushPlus] 警告: 日志缓冲为空且无账号统计，将发送空简报。请检查 pushplus.enabled/token 与 clusters 配置。')
+        lines.push('日志: 0 条（未收集到任何运行数据）')
     }
 
-    const errors = entries.filter(e => e.level === 'error')
-    const warns = entries.filter(e => e.level === 'warn')
-    const infos = entries.filter(e => e.level === 'info')
+    // ── 异常摘要：错误/警告去重、截断，各最多 5 条，不再罗列 info 日志 ──
+    const errors = condenseEntries(entries.filter(e => e.level === 'error'))
+    const warns = condenseEntries(entries.filter(e => e.level === 'warn'))
 
-    const lines: string[] = []
-    lines.push('======== 运行总结汇报 ========')
-    lines.push(`生成时间: ${now}`)
-    lines.push(`日志总数: ${entries.length} 条 | 错误 ${errors.length} | 警告 ${warns.length} | 信息 ${infos.length}`)
-    lines.push('')
-
-    const pushSection = (title: string, list: PushPlusLogEntry[]): void => {
-        if (list.length === 0) return
-        lines.push(`----- ${title} (${list.length} 条) -----`)
-        const shown = list.slice(0, 50)
-        for (const entry of shown) {
-            lines.push(`[${entry.level.toUpperCase()}] ${entry.content}`)
-        }
-        if (list.length > shown.length) {
-            lines.push(`... 其余 ${list.length - shown.length} 条已省略`)
-        }
+    if (errors.samples.length > 0 || warns.samples.length > 0) {
         lines.push('')
+        lines.push('── 异常摘要 ──')
+        for (const text of errors.samples.slice(0, MAX_DETAIL_ITEMS)) {
+            lines.push(`[错误] ${text}`)
+        }
+        if (errors.samples.length > MAX_DETAIL_ITEMS) {
+            lines.push(`... 其余错误 ${errors.samples.length - MAX_DETAIL_ITEMS} 条已省略`)
+        }
+        for (const text of warns.samples.slice(0, MAX_DETAIL_ITEMS)) {
+            lines.push(`[警告] ${text}`)
+        }
+        if (warns.samples.length > MAX_DETAIL_ITEMS) {
+            lines.push(`... 其余警告 ${warns.samples.length - MAX_DETAIL_ITEMS} 条已省略`)
+        }
     }
-
-    pushSection('错误', errors)
-    pushSection('警告', warns)
-    pushSection('信息', infos)
 
     lines.push('================================')
     return lines.join('\n')
 }
 
-export async function sendPushPlusSummary(config: WebhookPushPlusConfig | undefined): Promise<void> {
+export async function sendPushPlusSummary(
+    config: WebhookPushPlusConfig | undefined,
+    stats?: SummaryAccountStat[]
+): Promise<void> {
     if (!config?.token) return
 
-    const summary = buildSummary(pushPlusLogBuffer)
+    const summary = buildSummary(pushPlusLogBuffer, stats)
     pushPlusLogBuffer.length = 0
 
     await sendPushPlus(config, summary, 'info')
